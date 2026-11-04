@@ -1,0 +1,32 @@
+{
+  "id": "diorama-manguezal",
+  "title": "Diorama do Manguezal",
+  "scientificText": {
+    "status": "pending",
+    "body": ""
+  },
+  "cover": {
+    "status": "pending",
+    "src": null,
+    "alt": "",
+    "kind": "illustration",
+    "credit": null
+  },
+  "gallery": [],
+  "librasVideo": {
+    "status": "pending",
+    "src": null,
+    "poster": null,
+    "captionsSrc": null,
+    "transcript": "",
+    "credit": null
+  },
+  "audioDescriptionVideo": {
+    "status": "pending",
+    "src": null,
+    "poster": null,
+    "captionsSrc": null,
+    "transcript": "",
+    "credit": null
+  }
+}

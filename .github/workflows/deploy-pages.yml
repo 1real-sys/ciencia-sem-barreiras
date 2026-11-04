@@ -1,0 +1,61 @@
+name: Validate and publish SPA
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run check
+      - run: npm test
+      - run: npm run worker:check
+      - run: npm run worker:smoke
+      - run: npm run config
+        env:
+          REQUIRE_PRODUCTION_CONFIG: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' }}
+          API_BASE_URL: ${{ vars.API_BASE_URL }}
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ vars.SUPABASE_PUBLISHABLE_KEY }}
+          PUBLIC_BASE_URL: ${{ vars.PUBLIC_BASE_URL }}
+      - name: Build with configurable base
+        env:
+          BASE_HREF: ${{ vars.GITHUB_BASE_HREF }}
+          REPOSITORY: ${{ github.event.repository.name }}
+        run: npm run build -- --base-href "${BASE_HREF:-/$REPOSITORY/}"
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-evidence
+          path: |
+            playwright-report
+            test-results
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/ciencia-sem-barreiras/browser
+  deploy:
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/configure-pages@v5
+      - uses: actions/deploy-pages@v4
+        id: deployment

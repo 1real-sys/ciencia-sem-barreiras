@@ -1,0 +1,14 @@
+# INÍCIO — Cole isto no Codex
+
+Você é o responsável pela implementação de ponta a ponta do projeto acadêmico **Ciência Sem Barreiras V4** a partir do ZERO. O diretório atual contém **especificações e modelos**, não um projeto Angular pronto. Não encerre após criar documentação: crie o código real, rode testes e entregue fluxo funcional no ambiente local.
+
+1. Leia integralmente `README.md`, `AGENTS.md`, `docs/ARQUITETURA_V4.md`, `docs/PAINEL_ADMIN.md`, `docs/SEGURANCA.md`, `docs/ACEITE.md`, `docs/QR_CODES.md`, `docs/TEXTO_INSTITUCIONAL.md` e as skills relevantes de `.agents/skills/`.
+2. Inicialize Angular 22 standalone/TypeScript strict/Tailwind/Vitest/Playwright e um Cloudflare Worker TypeScript, preservando pasta de documentação. Configure GitHub Pages com roteamento hash e baseHref dinâmico; nenhum backend Java, nenhuma dependência de SSR.
+3. Implemente **primeiro a experiência mobile-first** de museu científico infantil acolhedor, com home ilustrada, nove cartões e página modelo completa. Inclua os conteúdos aprovados e estados pendentes sem inventar fatos sobre o acervo da ESBH.
+4. Implemente Supabase schema/RLS/Storage e camada pública de consulta. Componha Worker admin de verdade para senha compartilhada forte via segredo, rate limit, sessão curta, CORS estrito, rascunho, publicar, upload assinado, substituição e revisão.
+5. Implemente tela `/admin` com login por senha, nove ambientes, editor visual de texto e mídias (foto, áudio, vídeo Libras e vídeo audiodescrição), descrições/legendas/transcrições, prévia em celular, barra de progresso, Salvar rascunho e Publicar. Nunca exigir que a aluna entre no GitHub, nunca declarar upload bem-sucedido sem persistência confirmada.
+6. Implemente URLs estáveis para até quatro entradas QR por espaço, sem impor como decisão final; geração opcional de QR somente quando domínio/base URL estiver configurado. Integre VLibras oficial, acessibilidade WCAG e testes.
+7. Garanta que o conteúdo publicado seja visto após nova leitura sem deploy. Não utilizar commits para alterações editoriais. Faça E2E com mocks e prepare testes de integração reais para quem configurar as credenciais; anote qualquer pendência real.
+8. Crie documentação de configuração com comandos executáveis para GitHub Pages, Supabase e Cloudflare. Deixe `.env.example` e placeholders inequívocos; **nunca** comite segredos. Instale e rode build, lint e testes disponíveis, corrigindo falhas.
+
+**Critério central:** após configuração dos serviços, a estudante entra com uma senha, modifica um dos nove espaços e publica fotos/áudios/vídeos/textos pelo painel; qualquer visitante vê as alterações no site do GitHub Pages ao recarregar, sem necessidade de commits, Git ou espera por novo deploy. Se não puder garantir um requisito, documente limitação real em vez de fingir concluído.

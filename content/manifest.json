@@ -1,0 +1,51 @@
+{
+  "version": 3,
+  "project": "Ciência Sem Barreiras",
+  "environments": [
+    {
+      "slug": "aquario-nascente-rio",
+      "contentFile": "content/ambientes/aquario-nascente-rio.json"
+    },
+    {
+      "slug": "aquario-fundo-rio",
+      "contentFile": "content/ambientes/aquario-fundo-rio.json"
+    },
+    {
+      "slug": "aquario-lagoa",
+      "contentFile": "content/ambientes/aquario-lagoa.json"
+    },
+    {
+      "slug": "aquario-marinho",
+      "contentFile": "content/ambientes/aquario-marinho.json"
+    },
+    {
+      "slug": "aquario-praia",
+      "contentFile": "content/ambientes/aquario-praia.json"
+    },
+    {
+      "slug": "diorama-manguezal",
+      "contentFile": "content/ambientes/diorama-manguezal.json"
+    },
+    {
+      "slug": "diorama-restinga",
+      "contentFile": "content/ambientes/diorama-restinga.json"
+    },
+    {
+      "slug": "diorama-mata-atlantica",
+      "contentFile": "content/ambientes/diorama-mata-atlantica.json"
+    },
+    {
+      "slug": "diorama-mata-atlantica-2",
+      "contentFile": "content/ambientes/diorama-mata-atlantica-2.json"
+    }
+  ],
+  "qrModel": {
+    "status": "unconfirmed",
+    "resourceKeys": [
+      "texto",
+      "libras",
+      "audiodescricao"
+    ]
+  },
+  "reminder": "URLs e mídia reais dependem do GitHub Pages final e da revisão editorial."
+}

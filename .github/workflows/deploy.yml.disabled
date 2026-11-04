@@ -1,0 +1,50 @@
+name: Publicar Ciência Sem Barreiras
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Instalar dependências
+        run: npm ci
+      - name: Gerar build do Angular
+        shell: bash
+        run: |
+          REPO_NAME="${GITHUB_REPOSITORY#*/}"
+          if [[ "$REPO_NAME" == *.github.io ]]; then BASE_HREF="/"; else BASE_HREF="/$REPO_NAME/"; fi
+          npm run build -- --base-href "$BASE_HREF"
+      - name: Descobrir pasta compilada
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t CANDIDATES < <(find dist -type f -name index.html -printf '%h\n' | sort)
+          if [[ "${#CANDIDATES[@]}" -ne 1 ]]; then
+            echo "Era esperado exatamente um index.html em dist; encontrados: ${#CANDIDATES[@]}" >&2
+            printf '%s\n' "${CANDIDATES[@]}" >&2
+            exit 1
+          fi
+          echo "SITE_DIR=${CANDIDATES[0]}" >> "$GITHUB_ENV"
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: ${{ env.SITE_DIR }}
+      - name: Publicar
+        id: deployment
+        uses: actions/deploy-pages@v4

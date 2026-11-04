@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "note": "Arquivo de exemplo; não afirma que há conteúdo publicado ou autorização de uso.",
+  "hero": {"src": null, "mobileSrc": null, "kind": "illustration", "alt": "Ilustração panorâmica que apresenta, em regiões distintas, água doce, manguezal, ambiente marinho, Mata Atlântica e restinga.", "status": "pending", "credit": null},
+  "environments": {
+    "aquario-nascente-rio": {"image": {"src": null, "kind": "illustration", "status": "pending", "alt": null, "credit": null}, "scientificText": {"status": "draft"}, "audio": {"src": null, "transcript": null, "status": "pending"}, "librasVideo": {"src": null, "captions": null, "transcript": null, "status": "pending"}}
+  }
+}
