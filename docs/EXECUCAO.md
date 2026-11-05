@@ -96,6 +96,8 @@ O smoke verifica negativas de leitura/escrita, RPC e Storage anônimos, além da
 
 ## Recuperação e limites
 
+- Logs do Worker são configurados em `worker/wrangler.toml` por `[observability]` e `[observability.logs]`, com coleta de invocações habilitada. Consultar Cloudflare → Workers & Pages → `ciencia-sem-barreiras-admin` → Observability. Só há registros coletados após a ativação; não recupera requisições anteriores. Não adicionar senhas, tokens, headers Authorization ou corpos de formulários a logs. Rever amostragem, retenção e cotas conforme o uso e o plano.
+
 - Conflito de revisão: o Worker responde 409. Reabra o ambiente, revise e reaplique as mudanças; não sobrescreve silenciosamente.
 - Upload interrompido: selecione novamente. Objetos recebem UUID, sem reutilizar nomes. Staging é privado; arquivos não confirmados não podem ser publicados.
 - Limite da aplicação: 50 MiB por arquivo, sujeito ao limite menor configurado no projeto/plano. Comprima vídeos ou use URLs diretas de hosts autorizados. Hospedagem externa precisa permitir CORS para vídeos com legendas e deve ser verificada pelo responsável. Não há embed automático de páginas YouTube.

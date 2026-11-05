@@ -2,6 +2,12 @@ name = "ciencia-sem-barreiras-admin"
 account_id = "3e63e0d7e0470912941e840596ff7ca4"
 main = "src/index.ts"
 compatibility_date = "2026-11-04"
+[observability]
+enabled = true
+head_sampling_rate = 1
+[observability.logs]
+enabled = true
+invocation_logs = true
 [vars]
 ALLOWED_ORIGINS = "https://1real-sys.github.io,http://localhost:4200,http://localhost:4173"
 EXTERNAL_MEDIA_HOSTS = ""
