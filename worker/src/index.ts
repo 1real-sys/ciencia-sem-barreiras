@@ -100,6 +100,10 @@ function checked<T>(r: { data: T; error: unknown }): NonNullable<T> {
   if (r.error || r.data === null) throw new Error('database operation failed');
   return r.data as NonNullable<T>;
 }
+function checkedWrite(r: { error: unknown }): void {
+  // PostgREST mutations return data: null unless representation is requested.
+  if (r.error) throw new Error('database operation failed');
+}
 async function body(request: Request) {
   if (!request.headers.get('content-type')?.startsWith('application/json'))
     fail(415, 'Formato de envio inválido.');
@@ -502,7 +506,7 @@ async function handle(request: Request, env: Env) {
       validated: false,
       expires: Date.now() + 600000,
     };
-    checked(
+    checkedWrite(
       await client.from('space_media').insert({
         id,
         space_id: s.id,
@@ -548,7 +552,7 @@ async function handle(request: Request, env: Env) {
       await client.storage.from('csb-staging-media').remove([m.object_path]);
       fail(422, 'O conteúdo do arquivo não corresponde ao formato permitido.');
     }
-    checked(
+    checkedWrite(
       await client
         .from('space_media')
         .update({ metadata: { ...m.metadata, validated: true } })
@@ -619,7 +623,7 @@ export default {
       if (!references.includes(m.id)) {
         checked(await client.storage.from('csb-staging-media').remove([m.object_path]));
         checked(await client.storage.from('csb-public-media').remove([m.object_path]));
-        checked(await client.from('space_media').delete().eq('id', m.id));
+        checkedWrite(await client.from('space_media').delete().eq('id', m.id));
       }
     }
   },

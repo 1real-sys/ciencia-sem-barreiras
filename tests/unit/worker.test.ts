@@ -54,6 +54,96 @@ function req(
 }
 describe('Worker security boundary', () => {
   beforeEach(() => vi.clearAllMocks());
+  it.each([false, true])(
+    'handles minimal mutation responses during upload (error: %s)',
+    async (mutationError) => {
+      const { env } = fixture();
+      const login = await worker.fetch(
+        req('/admin/session', 'POST', { password: env.ADMIN_PASSWORD }),
+        env,
+      );
+      const { token } = await login.json();
+      const id = 'ed2f07ae-e9c6-4c71-923c-26422c5ac099';
+      const bytes = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]);
+      const result = { data: null, error: mutationError ? { message: 'write denied' } : null };
+      const insert = vi.fn(async () => result);
+      const update = vi.fn(() => ({ eq: async () => result }));
+      fakeDb.from.mockImplementation((table) => ({
+        select: () => ({
+          eq: () => ({
+            single: async () => ({
+              data:
+                table === 'spaces'
+                  ? { id, slug: 'diorama-mata-atlantica-2' }
+                  : {
+                      id,
+                      object_path: 'test.png',
+                      metadata: {
+                        expires: Date.now() + 60000,
+                        size: bytes.length,
+                        mime: 'image/png',
+                        validated: false,
+                      },
+                    },
+              error: null,
+            }),
+          }),
+        }),
+        insert,
+        update,
+      }));
+      fakeDb.storage.from.mockReturnValue({
+        createSignedUploadUrl: async () => ({
+          data: { signedUrl: 'https://storage.example/upload', token: 'test' },
+          error: null,
+        }),
+        createSignedUrl: async () => ({
+          data: { signedUrl: 'https://storage.example/preview' },
+          error: null,
+        }),
+      });
+      const auth = await worker.fetch(
+        req(
+          '/admin/uploads/authorize',
+          'POST',
+          {
+            slug: 'diorama-mata-atlantica-2',
+            kind: 'image',
+            mime: 'image/png',
+            size: bytes.length,
+          },
+          token,
+        ),
+        env,
+      );
+      expect(auth.status).toBe(mutationError ? 503 : 200);
+      expect(insert).toHaveBeenCalledOnce();
+      if (!mutationError)
+        expect((await auth.json()).uploadUrl).toBe('https://storage.example/upload');
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async (_url, init) =>
+          init.method === 'HEAD'
+            ? new Response(null, {
+                headers: { 'Content-Length': String(bytes.length), 'Content-Type': 'image/png' },
+              })
+            : new Response(bytes),
+        ),
+      );
+      try {
+        const complete = await worker.fetch(
+          req('/admin/uploads/complete', 'POST', { id }, token),
+          env,
+        );
+        expect(complete.status).toBe(mutationError ? 503 : 200);
+        expect(update).toHaveBeenCalledOnce();
+        if (!mutationError)
+          expect((await complete.json()).url).toBe('https://storage.example/preview');
+      } finally {
+        vi.unstubAllGlobals();
+      }
+    },
+  );
   it('denies unauthenticated private reads and publication', async () => {
     const { env } = fixture();
     for (const [p, m] of [
