@@ -290,16 +290,18 @@ async function handle(request: Request, env: Env) {
   const client = db(env);
   const publicMatch = path.match(/^\/public\/spaces\/([^/]+)$/);
   if (publicMatch && method === 'GET') {
-    const s = await space(client, publicMatch[1]);
+    const slug = slugSchema.parse(publicMatch[1]);
     const result = optional(
       await client
         .from('space_published')
-        .select('content,revision,updated_at,published_at')
-        .eq('space_id', s.id)
+        .select('content,revision,updated_at,published_at,spaces!inner(slug)')
+        .eq('spaces.slug', slug)
         .not('published_at', 'is', null)
         .maybeSingle(),
     );
-    return Response.json(result);
+    if (!result) return Response.json(null);
+    const { content, revision, updated_at, published_at } = result;
+    return Response.json({ content, revision, updated_at, published_at });
   }
   if (!path.startsWith('/admin/')) fail(404, 'Endereço não encontrado.');
   if (path === '/admin/session' && method === 'POST') {
@@ -325,11 +327,14 @@ async function handle(request: Request, env: Env) {
   if (method !== 'GET' && !(await guard(env, 'rate', 'write:' + session, undefined, 100)))
     fail(429, 'Aguarde antes de tentar novamente.');
   if (path === '/admin/spaces' && method === 'GET') {
-    const drafts = checked(await client.from('space_drafts').select('space_id,updated_at'));
-    const published = checked(
-      await client.from('space_published').select('space_id,updated_at,published_at'),
-    );
-    const spaces = checked(await client.from('spaces').select('id,slug'));
+    const [draftResult, publishedResult, spacesResult] = await Promise.all([
+      client.from('space_drafts').select('space_id,updated_at'),
+      client.from('space_published').select('space_id,updated_at,published_at'),
+      client.from('spaces').select('id,slug'),
+    ]);
+    const drafts = checked(draftResult);
+    const published = checked(publishedResult);
+    const spaces = checked(spacesResult);
     return Response.json(
       Object.fromEntries(
         spaces.map((s) => {
@@ -358,20 +363,19 @@ async function handle(request: Request, env: Env) {
     const s = await space(client, sm[1]);
     const action = sm[2];
     if (!action && method === 'GET') {
-      const d = optional(
-        await client.from('space_drafts').select('*').eq('space_id', s.id).maybeSingle(),
-      );
-      const p = optional(
-        await client.from('space_published').select('*').eq('space_id', s.id).maybeSingle(),
-      );
-      const h = checked(
-        await client
+      const [draftResult, publishedResult, historyResult] = await Promise.all([
+        client.from('space_drafts').select('*').eq('space_id', s.id).maybeSingle(),
+        client.from('space_published').select('*').eq('space_id', s.id).maybeSingle(),
+        client
           .from('space_revisions')
           .select('revision,created_at')
           .eq('space_id', s.id)
           .order('revision', { ascending: false })
           .limit(20),
-      );
+      ]);
+      const d = optional(draftResult);
+      const p = optional(publishedResult);
+      const h = checked(historyResult);
       return Response.json({
         draft: {
           content: await hydrate(client, d?.content || emptyContent()),

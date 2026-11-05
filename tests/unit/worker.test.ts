@@ -54,6 +54,33 @@ function req(
 }
 describe('Worker security boundary', () => {
   beforeEach(() => vi.clearAllMocks());
+  it.each(['published', 'empty', 'error'])(
+    'reads only the public snapshot with one query: %s',
+    async (state) => {
+      const { env } = fixture();
+      const snapshot = {
+        content: emptyContent(),
+        revision: 2,
+        updated_at: '2026-11-04',
+        published_at: '2026-11-04',
+      };
+      const maybeSingle = vi.fn(async () => ({
+        data: state === 'published' ? { ...snapshot, spaces: { slug: 'aquario-marinho' } } : null,
+        error: state === 'error' ? { message: 'unavailable' } : null,
+      }));
+      const not = vi.fn(() => ({ maybeSingle }));
+      const eq = vi.fn(() => ({ not }));
+      fakeDb.from.mockReturnValue({ select: () => ({ eq }) });
+      const response = await worker.fetch(req('/public/spaces/aquario-marinho'), env);
+      expect(response.status).toBe(state === 'error' ? 503 : 200);
+      expect(fakeDb.from).toHaveBeenCalledExactlyOnceWith('space_published');
+      expect(eq).toHaveBeenCalledWith('spaces.slug', 'aquario-marinho');
+      expect(not).toHaveBeenCalledWith('published_at', 'is', null);
+      expect(response.headers.get('Cache-Control')).toBe('no-store');
+      if (state !== 'error')
+        expect(await response.json()).toEqual(state === 'published' ? snapshot : null);
+    },
+  );
   it.each([false, true])(
     'handles minimal mutation responses during upload (error: %s)',
     async (mutationError) => {

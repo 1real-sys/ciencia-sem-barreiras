@@ -14,6 +14,13 @@ A aplicação foi implementada e validada localmente. O registro inicial abaixo 
 
 As pendências cloud do registro inicial abaixo devem ser interpretadas à luz desta atualização.
 
+## Métricas e otimização de consultas do Worker
+
+- GraphQL Analytics real, janela 2026-11-04 00:40 a 2026-11-05 00:40 UTC: 109 requests, 168 subrequests e zero erros de execução; CPU P50 3,005 ms / P99 19,084 ms, wall time P50 140,281 ms / P99 1.816,393 ms. Unidades em microssegundos confirmadas por introspecção do schema. Zero erros de execução não significa zero respostas HTTP de erro tratadas pela aplicação.
+- Consulta pública passou de duas chamadas sequenciais para uma consulta com relação `spaces!inner(slug)`, retornando os mesmos campos públicos. Consultas independentes do dashboard e do editor agora são paralelas. Conteúdo segue `no-store`.
+- Quatro leituras reais do mesmo endpoint público antes: 507/493/819/491 ms; depois: 884/297/270/292 ms. Mediana aproximada 500 → 295 ms (41% menor), mas a primeira leitura posterior foi mais lenta. Amostra pequena, de um único cliente, sem carga: não comprova ganho global nem latência máxima.
+- 25 testes, tipos e lint passaram; smoke cloud de proteção e leitura pública repetido após deploy. Upload/publicação e sessão mantêm os mesmos controles. Dashboard/editor otimizados ainda requerem comparação manual de tempo autenticado.
+
 ## Correção confirmada: Mata Atlântica 1 e 2
 
 São nove ambientes. O diorama existente agora se chama **Diorama da Mata Atlântica 1**, mantendo o slug `diorama-mata-atlantica`. O segundo usa `diorama-mata-atlantica-2`, com página, editor, mídias e QR independentes. A migração `0003_mata_atlantica_2.sql` preserva ID e conteúdo do primeiro; o teste aplica a correção duas vezes e verifica ausência de duplicação e manutenção do rascunho. A aplicação no Supabase hospedado continua pendente de credenciais.
