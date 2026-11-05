@@ -1,6 +1,6 @@
 {
-  "apiBaseUrl": "http://localhost:8787",
-  "supabaseUrl": "",
-  "supabasePublishableKey": "",
+  "apiBaseUrl": "https://ciencia-sem-barreiras-admin.cauan-anna.workers.dev",
+  "supabaseUrl": "https://mukjhmfooafxgjithmql.supabase.co",
+  "supabasePublishableKey": "sb_publishable_ZlYz0ij_nDgoo_VfEKvWuA_yC9q5wV0",
   "publicBaseUrl": ""
 }

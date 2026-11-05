@@ -40,7 +40,7 @@ VISITANTE (celular)                     EDITORA (celular ou computador)
 - `GET /health` -> sem divulgar secrets ou detalhes de usuários.
 
 ## Ambiente local/produção
-Frontend: `API_BASE_URL` = Worker public URL, `SUPABASE_URL` = projeto, `SUPABASE_PUBLISHABLE_KEY` = chave pública. Configurar `GITHUB_BASE_HREF` para projeto ou domínio personalizado.
+Frontend: `API_BASE_URL` = Worker public URL, `SUPABASE_URL` = projeto, `SUPABASE_PUBLISHABLE_KEY` = chave pública. Configurar `PAGES_BASE_HREF` para projeto ou domínio personalizado.
 Worker secrets: `ADMIN_PASSWORD` (forte), `SESSION_SIGNING_KEY` (aleatório >=32 bytes), `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`; bindings de rate limit persistente. CORS allowlist `https://USUARIO.github.io` (origin não inclui path) + localhost portas explícitas para dev. Não confundir CORS com autenticação.
 
 ## Falhas possíveis

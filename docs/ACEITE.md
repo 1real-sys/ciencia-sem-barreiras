@@ -1,6 +1,16 @@
 # Aceite V4 — evidências locais de 04/11/2026
 
-A aplicação foi implementada e validada localmente. **Não houve deploy hospedado nem uso de credenciais de contas externas.** Os testes com simulador não equivalem a validação de Supabase/Cloudflare/GitHub em produção.
+A aplicação foi implementada e validada localmente. O registro inicial abaixo antecede a ativação cloud descrita nesta atualização. Os testes com simulador não equivalem a validação de Supabase/Cloudflare/GitHub em produção.
+
+## Atualização: ativação Supabase e Cloudflare
+
+- Responsável confirmou execução das três migrações, nove ambientes e dois buckets (staging privado, publicado público) no Supabase hospedado.
+- Worker publicado em `https://ciencia-sem-barreiras-admin.cauan-anna.workers.dev`, com Durable Object e cron. Os quatro nomes de secrets foram confirmados pela CLI; valores não foram lidos. CORS inclui `https://1real-sys.github.io`.
+- `cloud-smoke.mjs` executado contra serviços reais com chave pública: acesso administrativo sem sessão, leitura de rascunhos/histórico, escrita anônima, RPC e upload anônimo negados; leitura pública retornou HTTP 200, `null` (sem conteúdo publicado) e `Cache-Control: no-store`.
+- Storage retornou HTTP 400 com payload `statusCode: 403`, `code: AccessDenied` e mensagem RLS. O smoke aceita essa combinação específica, mantendo rejeição de erros 400 genéricos.
+- Permanecem pendentes: configuração/deploy GitHub Pages, login real com a senha escolhida, salvar/publicar e upload autenticado, validação de expiração das URLs assinadas. O smoke não comprova esses fluxos.
+
+As pendências cloud do registro inicial abaixo devem ser interpretadas à luz desta atualização.
 
 ## Correção confirmada: Mata Atlântica 1 e 2
 

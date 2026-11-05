@@ -30,7 +30,7 @@ jobs:
           PUBLIC_BASE_URL: ${{ vars.PUBLIC_BASE_URL }}
       - name: Build with configurable base
         env:
-          BASE_HREF: ${{ vars.GITHUB_BASE_HREF }}
+          BASE_HREF: ${{ vars.PAGES_BASE_HREF }}
           REPOSITORY: ${{ github.event.repository.name }}
         run: npm run build -- --base-href "${BASE_HREF:-/$REPOSITORY/}"
       - run: npx playwright install --with-deps chromium

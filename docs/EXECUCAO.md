@@ -72,7 +72,7 @@ npm run build -- --base-href /REPOSITORIO/
 
 A leitura pública usa `/public/spaces/:slug` no Worker e consulta **somente** `space_published`. Essa alternativa está prevista na arquitetura. O frontend não precisa consultar diretamente o banco. As opções públicas Supabase ficam disponíveis em configuração; a chave nunca autoriza escrita. O gerador rejeita chaves privilegiadas e URLs sem HTTPS fora de localhost.
 
-6. No GitHub, crie/associe o repositório e habilite Pages com fonte **GitHub Actions**. Cadastre Repository Variables `API_BASE_URL`, `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `PUBLIC_BASE_URL`, `GITHUB_BASE_HREF`. Para domínio próprio, `GITHUB_BASE_HREF=/`; para projeto, `/REPOSITORIO/`. O pipeline de main bloqueia uma publicação sem API e URL pública configuradas; pull requests podem validar localmente sem secrets.
+6. No GitHub, crie/associe o repositório e habilite Pages com fonte **GitHub Actions**. Cadastre Repository Variables `API_BASE_URL`, `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `PUBLIC_BASE_URL`, `PAGES_BASE_HREF`. Para domínio próprio, `PAGES_BASE_HREF=/`; para projeto, `/REPOSITORIO/`. O pipeline de main bloqueia uma publicação sem API e URL pública configuradas; pull requests podem validar localmente sem secrets.
 7. O workflow instala dependências, verifica tipos/lint/unit/E2E, compila e envia apenas `dist/ciencia-sem-barreiras/browser` ao Pages. `.nojekyll` acompanha o artefato. Não publica Worker nem banco automaticamente. Nunca cadastre secrets do Worker como variáveis públicas do frontend.
 8. Execute verificações cloud com credenciais **públicas**, em projeto de homologação dedicado:
 

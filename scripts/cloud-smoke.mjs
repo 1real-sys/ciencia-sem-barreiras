@@ -7,8 +7,17 @@ const api = process.env.API_BASE_URL,
 if (!api || !sb || !key || !origin)
   throw Error('Set API_BASE_URL, SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY and PUBLIC_ORIGIN.');
 const headers = { apikey: key, 'Content-Type': 'application/json' };
-async function denied(url, init) {
+async function denied(url, init, storage = false) {
   const r = await fetch(url, init);
+  // Storage can wrap an RLS denial in HTTP 400. Accept only its explicit
+  // access-denied payload, never a generic validation/bad-request response.
+  if (storage && r.status === 400) {
+    const error = await r.json();
+    assert.equal(String(error.statusCode), '403');
+    assert.equal(error.code, 'AccessDenied');
+    assert.match(error.message, /row-level security policy/i);
+    return;
+  }
   assert.ok([401, 403].includes(r.status), 'Expected access denied, got ' + r.status);
 }
 await denied(api + '/admin/spaces', { headers: { Origin: origin } });
@@ -33,7 +42,7 @@ await denied(sb + '/storage/v1/object/csb-staging-media/unauthorized-probe.png',
   method: 'POST',
   headers: { ...headers, 'Content-Type': 'image/png' },
   body: new Uint8Array([137, 80, 78, 71]),
-});
+}, true);
 const publicRead = await fetch(api + '/public/spaces/aquario-marinho', {
   headers: { Origin: origin },
 });
