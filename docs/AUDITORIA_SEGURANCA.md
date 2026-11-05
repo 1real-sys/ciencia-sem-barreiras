@@ -21,7 +21,7 @@ O teste cloud usa PATCH não vazio: PostgREST pode retornar sucesso sem efeito p
 
 - Authorization exige formato Bearer com o comprimento/alfabeto do token emitido. Valores malformados são recusados antes de consultar o Durable Object.
 - Respostas da API incluem `Referrer-Policy: no-referrer` e `X-Frame-Options: DENY`, além de `nosniff` e `no-store`. Esses headers não configuram o HTML hospedado no GitHub Pages.
-- Rate Limiting nativo do Cloudflare antes de banco/sessão: leitura pública com alvo de 600 chamadas por IP/60 s; administração com alvo de 120 por IP/60 s. Excesso retorna 429 e `Retry-After: 60`. Usa `CF-Connecting-IP` fornecido pela borda, não `X-Forwarded-For` controlado pelo cliente.
+- Rate Limiting nativo do Cloudflare antes de banco/sessão: leitura pública com alvo de 6.000 chamadas por IP/60 s; administração com alvo de 120 por IP/60 s. O valor público inicial de 600 foi ampliado para acomodar visitantes que compartilham Wi-Fi escolar. Isso aumenta a margem, mas não elimina falsos positivos nem comprova capacidade do banco: 100 visitantes dividem o teto, que equivale a 60 consultas por pessoa/minuto sob distribuição uniforme. Excesso retorna 429 e `Retry-After: 60`. Usa `CF-Connecting-IP` fornecido pela borda, não `X-Forwarded-For` controlado pelo cliente.
 - Continuam os limites persistentes de cinco tentativas de login/IP/10 min e cem mutações/sessão/10 min. Falha no serviço de limitação não libera acesso: retorna indisponibilidade.
 
 ## Limites importantes e pendências

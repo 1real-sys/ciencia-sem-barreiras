@@ -86,7 +86,7 @@ try {
   );
   // Local runtime only: exercise the native limiter without querying a database.
   let throttled = false;
-  for (let i = 0; i < 650; i++) {
+  for (let i = 0; i < 6500; i++) {
     const probe = await fetch(api + '/public/rate-probe', { headers });
     await probe.arrayBuffer();
     if (probe.status === 429) {

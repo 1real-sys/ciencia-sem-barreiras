@@ -8,7 +8,8 @@ EXTERNAL_MEDIA_HOSTS = ""
 [[ratelimits]]
 name = "PUBLIC_REQUESTS"
 namespace_id = "1001"
-simple = { limit = 600, period = 60 }
+# Shared school Wi-Fi: this budget covers all visitors behind the same public IP.
+simple = { limit = 6000, period = 60 }
 [[ratelimits]]
 name = "ADMIN_REQUESTS"
 namespace_id = "1002"
