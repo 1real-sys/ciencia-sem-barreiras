@@ -5,6 +5,14 @@ compatibility_date = "2026-11-04"
 [vars]
 ALLOWED_ORIGINS = "https://1real-sys.github.io,http://localhost:4200,http://localhost:4173"
 EXTERNAL_MEDIA_HOSTS = ""
+[[ratelimits]]
+name = "PUBLIC_REQUESTS"
+namespace_id = "1001"
+simple = { limit = 600, period = 60 }
+[[ratelimits]]
+name = "ADMIN_REQUESTS"
+namespace_id = "1002"
+simple = { limit = 120, period = 60 }
 [[durable_objects.bindings]]
 name = "GUARD"
 class_name = "Guard"

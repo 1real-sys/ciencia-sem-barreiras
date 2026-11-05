@@ -17,7 +17,8 @@
     "demo": "node scripts/demo-api.mjs",
     "config": "node scripts/config.mjs",
     "worker:smoke": "node scripts/worker-smoke.mjs",
-    "cloud:smoke": "node scripts/cloud-smoke.mjs"
+    "cloud:smoke": "node scripts/cloud-smoke.mjs",
+    "security:cloud": "node scripts/security-cloud.mjs"
   },
   "private": true,
   "packageManager": "npm@11.20.0",

@@ -30,6 +30,8 @@ function fixture() {
     SUPABASE_SERVICE_ROLE_KEY: 'server-only-test',
     ALLOWED_ORIGINS: 'https://example.github.io',
     EXTERNAL_MEDIA_HOSTS: '',
+    PUBLIC_REQUESTS: { limit: vi.fn(async () => ({ success: true })) },
+    ADMIN_REQUESTS: { limit: vi.fn(async () => ({ success: true })) },
     GUARD: { idFromName: () => '', get: () => guard },
   } as unknown as Env;
   return { env, storage };
@@ -54,6 +56,61 @@ function req(
 }
 describe('Worker security boundary', () => {
   beforeEach(() => vi.clearAllMocks());
+  it.each(['/public/spaces/aquario-marinho', '/admin/spaces'])(
+    'throttles abuse before accessing database or session storage: %s',
+    async (path) => {
+      const { env } = fixture();
+      const limiter = path.startsWith('/admin') ? env.ADMIN_REQUESTS : env.PUBLIC_REQUESTS;
+      vi.mocked(limiter.limit).mockResolvedValue({ success: false });
+      const get = vi.spyOn(env.GUARD, 'get');
+      const request = req(path);
+      request.headers.set('X-Forwarded-For', 'attacker-controlled');
+      const response = await worker.fetch(request, env);
+      expect(response.status).toBe(429);
+      expect(response.headers.get('Retry-After')).toBe('60');
+      expect(limiter.limit).toHaveBeenCalledWith({ key: '192.0.2.1' });
+      expect(fakeDb.from).not.toHaveBeenCalled();
+      expect(get).not.toHaveBeenCalled();
+    },
+  );
+  it('fails closed when the rate limiting service fails', async () => {
+    const { env } = fixture();
+    vi.mocked(env.PUBLIC_REQUESTS.limit).mockRejectedValue(new Error('internal details'));
+    const response = await worker.fetch(req('/public/spaces/aquario-marinho'), env);
+    expect(response.status).toBe(503);
+    expect(await response.text()).not.toContain('internal details');
+    expect(fakeDb.from).not.toHaveBeenCalled();
+  });
+  it('rejects malformed credentials before accessing session storage', async () => {
+    const { env } = fixture();
+    const get = vi.spyOn(env.GUARD, 'get');
+    for (const value of ['Basic fake', 'fake', 'Bearer ' + 'x'.repeat(10000), 'Bearer short']) {
+      const request = req('/admin/spaces');
+      request.headers.set('Authorization', value);
+      expect((await worker.fetch(request, env)).status).toBe(401);
+    }
+    expect(get).not.toHaveBeenCalled();
+    expect(fakeDb.from).not.toHaveBeenCalled();
+  });
+  it('rejects invalid JSON, wrong content types and oversized bodies', async () => {
+    for (const [payload, type, status] of [
+      ['{', 'application/json', 422],
+      ['{}', 'text/plain', 415],
+      ['x'.repeat(300001), 'application/json', 413],
+    ] as const) {
+      const { env } = fixture();
+      const r = await worker.fetch(
+        new Request('https://api.example/admin/session', {
+          method: 'POST',
+          headers: { Origin: 'https://example.github.io', 'Content-Type': type },
+          body: payload,
+        }),
+        env,
+      );
+      expect(r.status).toBe(status);
+      expect(await r.text()).not.toMatch(/stack|SUPABASE|service_role|test-only/);
+    }
+  });
   it.each(['published', 'empty', 'error'])(
     'reads only the public snapshot with one query: %s',
     async (state) => {

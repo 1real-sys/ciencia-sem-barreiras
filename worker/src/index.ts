@@ -10,6 +10,8 @@ export interface Env {
   ALLOWED_ORIGINS: string;
   EXTERNAL_MEDIA_HOSTS: string;
   GUARD: DurableObjectNamespace;
+  PUBLIC_REQUESTS: RateLimit;
+  ADMIN_REQUESTS: RateLimit;
 }
 export class Guard {
   constructor(private state: DurableObjectState) {}
@@ -262,7 +264,7 @@ export function signature(mime: string, b: Uint8Array) {
   return false;
 }
 async function authenticated(request: Request, env: Env) {
-  const token = request.headers.get('Authorization')?.replace(/^Bearer /, '');
+  const token = request.headers.get('Authorization')?.match(/^Bearer ([0-9a-f-]{72})$/)?.[1];
   if (!token) fail(401, 'Entre novamente para continuar.');
   const key = 'session:' + (await hash(token));
   const session = await guard<{ expires: number; fingerprint: string } | null>(env, 'get', key);
@@ -578,6 +580,8 @@ export default {
       Vary: 'Origin',
       'Cache-Control': 'no-store',
       'X-Content-Type-Options': 'nosniff',
+      'Referrer-Policy': 'no-referrer',
+      'X-Frame-Options': 'DENY',
     };
     if (allowed) {
       cors['Access-Control-Allow-Origin'] = origin;
@@ -587,6 +591,19 @@ export default {
     try {
       if (path.startsWith('/admin/') && !allowed) fail(403, 'Origem não permitida.');
       if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });
+      const limiter = path.startsWith('/admin/')
+        ? env.ADMIN_REQUESTS
+        : path.startsWith('/public/')
+          ? env.PUBLIC_REQUESTS
+          : undefined;
+      if (path.startsWith('/admin/') || path.startsWith('/public/')) {
+        if (!limiter) fail(503, 'Serviço indisponível. Tente novamente.');
+        const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+        if (!(await limiter.limit({ key: ip })).success) {
+          cors['Retry-After'] = '60';
+          fail(429, 'Muitos acessos em pouco tempo. Aguarde um minuto e tente novamente.');
+        }
+      }
       const r = await handle(request, env);
       for (const [k, v] of Object.entries(cors)) r.headers.set(k, v);
       return r;

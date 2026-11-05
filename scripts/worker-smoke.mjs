@@ -84,8 +84,22 @@ try {
     ).status,
     403,
   );
+  // Local runtime only: exercise the native limiter without querying a database.
+  let throttled = false;
+  for (let i = 0; i < 650; i++) {
+    const probe = await fetch(api + '/public/rate-probe', { headers });
+    await probe.arrayBuffer();
+    if (probe.status === 429) {
+      assert.equal(probe.headers.get('Retry-After'), '60');
+      throttled = true;
+      break;
+    }
+    assert.equal(probe.status, 404);
+  }
+  assert.ok(throttled, 'Native public limiter did not reject excess local requests');
+  assert.equal((await fetch(api + '/health')).status, 200);
   console.log(
-    'Worker runtime local + Durable Object: login, authentication, logout, revocation, persistent rate limit and CORS passed. No cloud database accessed.',
+    'Worker runtime local + Durable Object: login, authentication, logout, revocation, persistent limits, native public limiter and CORS passed. No cloud database accessed.',
   );
 } finally {
   child.kill('SIGINT');

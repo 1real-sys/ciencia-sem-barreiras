@@ -1,5 +1,7 @@
 # Aceite V4 — evidências locais de 04/11/2026
 
+Auditoria posterior: [segurança, testes e limites da proteção contra abuso](AUDITORIA_SEGURANCA.md). Inclui 30 testes unitários, 13 cenários de navegador, 28 verificações cloud e limitadores nativos no Worker; não representa garantia contra DDoS nem substitui backup.
+
 A aplicação foi implementada e validada localmente. O registro inicial abaixo antecede a ativação cloud descrita nesta atualização. Os testes com simulador não equivalem a validação de Supabase/Cloudflare/GitHub em produção.
 
 ## Atualização: ativação Supabase e Cloudflare
