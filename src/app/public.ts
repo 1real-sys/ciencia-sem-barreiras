@@ -4,6 +4,7 @@ import { Data } from './data';
 import { ContentView } from './content-view';
 import { SPACES, Snapshot, emptyContent } from '../../shared/content';
 import { PURPOSE } from './institutional';
+import { spaceCover } from './covers';
 @Component({
   selector: 'app-public',
   imports: [RouterLink, ContentView],
@@ -47,8 +48,10 @@ import { PURPOSE } from './institutional';
         <div class="cards">
           @for (s of spaces; track s[0]; let i = $index) {
             <a class="space-card" [routerLink]="['/ambientes', s[0]]"
-              ><div class="card-art" [class.forest]="i > 4">
-                <img [src]="s[0] + '.svg'" alt="" /><span class="art-label">Ilustração</span
+              ><div class="card-art" [class.forest]="i > 4 && cover(s[0]).illustration">
+                <img [src]="cover(s[0]).src" alt="" loading="lazy" /><span class="art-label">{{
+                  cover(s[0]).label
+                }}</span
                 ><span class="number">{{ ('0' + (i + 1)).slice(-2) }}</span>
               </div>
               <div class="card-body">
@@ -120,6 +123,7 @@ export class PublicPage {
   route = inject(ActivatedRoute);
   mode = this.route.snapshot.data['mode'];
   spaces = SPACES;
+  cover = spaceCover;
   space: (typeof SPACES)[number] | undefined;
   purpose = PURPOSE;
   resources = [

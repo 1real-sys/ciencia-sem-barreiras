@@ -1,5 +1,13 @@
 # Aceite V4 — evidências locais de 04/11/2026
 
+## Atualização: capas fotográficas de 06/11/2026
+
+- Sete JPEGs fornecidos em `imagens/` associados pelo nome aos ambientes na home, listagem e dashboard administrativo; origem e mapeamento registrados em `imagens/README.md`. Fotos identificadas como “Fotografia”, sem filtro de cor; os dois ambientes sem foto mantêm as ilustrações. Os originais foram preservados.
+- `npm run check`, `npm run lint` e `npm test`: aprovados, **30 testes unitários**. Build com `npm run build -- --base-href /ciencia-sem-barreiras/` aprovado; permanece o aviso conhecido de CommonJS de `qrcode`.
+- **13 cenários Playwright aprovados**, incluindo carregamento real das nove capas no build sob subdiretório, mapeamento dos sete JPEGs, rótulos e ausência de filtro; dashboard com sete fotografias e Mata Atlântica 1/2 independentes. Responsividade em 320/360/375/390/414/768/1024/1440 px, axe-core, teclado, QR e fluxo local de edição/publicação continuaram aprovados. Captura desktop revisada visualmente.
+- Ambiente desta execução: o sandbox bloqueou a abertura das portas locais e `/usr/bin/google-chrome` não existe. Testes executados fora do sandbox com o Chromium já instalado: `CHROME_BIN=/home/jlm1real/.cache/ms-playwright/chromium-1248/chrome-linux64/chrome npm run test:e2e`.
+- Verificação feita localmente com API simulada; não constitui validação de publicação autenticada no Supabase nem revisão humana com leitor de tela.
+
 Auditoria posterior: [segurança, testes e limites da proteção contra abuso](AUDITORIA_SEGURANCA.md). Inclui 30 testes unitários, 13 cenários de navegador, 28 verificações cloud e limitadores nativos no Worker; não representa garantia contra DDoS nem substitui backup.
 
 A aplicação foi implementada e validada localmente. O registro inicial abaixo antecede a ativação cloud descrita nesta atualização. Os testes com simulador não equivalem a validação de Supabase/Cloudflare/GitHub em produção.

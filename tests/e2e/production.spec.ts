@@ -28,6 +28,7 @@ test.beforeAll(async () => {
         '.js': 'text/javascript',
         '.css': 'text/css',
         '.svg': 'image/svg+xml',
+        '.jpeg': 'image/jpeg',
         '.json': 'application/json',
       };
       const bytes = await readFile(file);
@@ -64,6 +65,33 @@ test('built Pages artifact serves assets and reopens hash routes under configure
   const image = page.locator('.hero-art img');
   await expect(image).toBeVisible();
   expect(await image.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
+  for (const route of ['#/', '#/ambientes']) {
+    await page.goto('http://localhost:4174' + base + route);
+    const cards = page.locator('.space-card');
+    await expect(cards).toHaveCount(9);
+    const files = [
+      'aquario-nascente-rio.svg',
+      'aquario-fundo-rio.svg',
+      'imagens/AquarioLagoa.jpeg',
+      'imagens/AquarioMarinho.jpeg',
+      'imagens/AquarioPraia.jpeg',
+      'imagens/Manguezal.jpeg',
+      'imagens/Restinga.jpeg',
+      'imagens/MataAtlantica1.jpeg',
+      'imagens/MataAtlantica2.jpeg',
+    ];
+    for (const [index, file] of files.entries()) {
+      const card = cards.nth(index);
+      const cover = card.locator('img');
+      await cover.scrollIntoViewIfNeeded();
+      await expect(cover).toHaveAttribute('src', file);
+      await expect
+        .poll(() => cover.evaluate((img: HTMLImageElement) => img.naturalWidth))
+        .toBeGreaterThan(0);
+      await expect(card.locator('.art-label')).toHaveText(index < 2 ? 'Ilustração' : 'Fotografia');
+      expect(await cover.evaluate((img) => getComputedStyle(img).filter)).toBe('none');
+    }
+  }
   await page.goto('http://localhost:4174' + base + '#/ambientes/aquario-marinho?recurso=texto');
   await expect(page.locator('#texto')).toBeFocused();
   await page.reload();

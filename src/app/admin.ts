@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import QRCode from 'qrcode';
 import { Data } from './data';
 import { ContentView } from './content-view';
+import { spaceCover } from './covers';
 import {
   Content,
   Media,
@@ -52,7 +53,10 @@ interface EditorData {
         <div class="cards">
           @for (s of spaces; track s[0]) {
             <article class="space-card">
-              <div class="card-art"><img [src]="s[0] + '.svg'" alt="Ilustração do ambiente" /></div>
+              <div class="card-art">
+                <img [src]="coverImage(s[0]).src" alt="" loading="lazy" />
+                <span class="art-label">{{ coverImage(s[0]).label }}</span>
+              </div>
               <div class="card-body">
                 <h2>{{ s[1] }}</h2>
                 <p>{{ summary(s[0]) }}</p>
@@ -270,6 +274,7 @@ interface EditorData {
 export class Admin {
   data = inject(Data);
   spaces = SPACES;
+  coverImage = spaceCover;
   password = '';
   busy = signal(false);
   message = signal('');

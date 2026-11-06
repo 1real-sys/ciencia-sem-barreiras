@@ -23,6 +23,11 @@
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "*.jpeg",
+                "input": "imagens",
+                "output": "imagens"
               }
             ],
             "styles": ["src/styles.css"]

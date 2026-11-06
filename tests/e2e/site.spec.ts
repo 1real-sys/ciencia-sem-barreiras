@@ -77,6 +77,11 @@ test('editor draft isolation, upload, publish, refresh, remove section, restore,
   await expect(page.getByRole('heading', { name: 'Gerenciar ambientes' })).toBeVisible();
   await expect(page.locator('.space-card')).toHaveCount(9);
   await expect(
+    page.locator('.space-card .art-label').filter({ hasText: 'Fotografia' }),
+  ).toHaveCount(7);
+  await expect(page.locator('.space-card img[src="imagens/MataAtlantica1.jpeg"]')).toHaveCount(1);
+  await expect(page.locator('.space-card img[src="imagens/MataAtlantica2.jpeg"]')).toHaveCount(1);
+  await expect(
     page.getByRole('heading', { name: 'Diorama da Mata Atlântica 1', exact: true }),
   ).toBeVisible();
   await expect(
