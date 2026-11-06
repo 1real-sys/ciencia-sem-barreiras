@@ -47,9 +47,19 @@ test('all nine pages and QR resource focus survive refresh', async ({ page }) =>
     await expect(page.getByRole('heading', { level: 1 })).not.toBeEmpty();
     await expect(page.locator('#libras')).toBeVisible();
     await expect(page.locator('#libras')).toBeFocused();
-    await expect(
-      page.getByRole('heading', { name: 'Vídeo com audiodescrição', exact: true }),
-    ).toHaveCount(1);
+    await expect(page.locator('.resource-nav a')).toHaveText([
+      'Texto',
+      'Fotos',
+      'Libras',
+      'Audiodescrição',
+      'Atividades',
+    ]);
+    expect(
+      await page
+        .locator('app-content > section')
+        .evaluateAll((sections) => sections.map((section) => section.id)),
+    ).toEqual(['texto', 'fotos', 'libras', 'audiodescricao', 'atividades']);
+    await expect(page.getByRole('heading', { name: 'Audiodescrição', exact: true })).toHaveCount(1);
     await expect(page.getByRole('heading', { name: 'Ouça o conteúdo', exact: true })).toHaveCount(
       0,
     );

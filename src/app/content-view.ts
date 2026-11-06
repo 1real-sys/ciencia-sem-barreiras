@@ -59,25 +59,10 @@ import { Content } from '../../shared/content';
         <p class="pending">Conteúdo em preparação</p>
       }
     </section>
-    <section id="atividades" tabindex="-1">
-      <h2>Atividades</h2>
-      @for (m of content().media; track m.id) {
-        @if (m.kind === 'activity_pdf' && m.enabled) {
-          <p>
-            <a [href]="m.url" target="_blank" rel="noopener noreferrer"
-              >{{ m.alt }} (PDF, abre em nova aba)</a
-            ><br /><small>{{ m.credit }}</small>
-          </p>
-        }
-      }
-      @if (!has('activity_pdf')) {
-        <p class="pending">Conteúdo em preparação</p>
-      }
-    </section>
     @for (kind of ['libras', 'audiodescricao']; track kind) {
       <section [id]="kind" tabindex="-1">
         <h2>
-          {{ kind === 'libras' ? 'Veja em Libras' : 'Vídeo com audiodescrição' }}
+          {{ kind === 'libras' ? 'Veja em Libras' : 'Audiodescrição' }}
         </h2>
         @for (m of content().media; track m.id) {
           @if (m.kind === kind && m.enabled) {
@@ -113,6 +98,21 @@ import { Content } from '../../shared/content';
         }
       </section>
     }
+    <section id="atividades" tabindex="-1">
+      <h2>Atividades</h2>
+      @for (m of content().media; track m.id) {
+        @if (m.kind === 'activity_pdf' && m.enabled) {
+          <p>
+            <a [href]="m.url" target="_blank" rel="noopener noreferrer"
+              >{{ m.alt }} (PDF, abre em nova aba)</a
+            ><br /><small>{{ m.credit }}</small>
+          </p>
+        }
+      }
+      @if (!has('activity_pdf')) {
+        <p class="pending">Conteúdo em preparação</p>
+      }
+    </section>
   `,
 })
 export class ContentView {

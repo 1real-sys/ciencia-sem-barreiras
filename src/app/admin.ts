@@ -317,10 +317,10 @@ export class Admin {
   qrSvg = signal('');
   kinds = [
     ['text_pdf', 'PDF do texto', 'application/pdf'],
-    ['activity_pdf', 'Atividades', 'application/pdf'],
     ['image', 'Fotos', 'image/jpeg,image/png,image/webp'],
     ['libras', 'Vídeo em Libras', 'video/mp4,video/webm'],
-    ['audiodescricao', 'Vídeo com audiodescrição', 'video/mp4,video/webm'],
+    ['audiodescricao', 'Audiodescrição', 'video/mp4,video/webm'],
+    ['activity_pdf', 'Atividades', 'application/pdf'],
     ['audio', 'Áudio (opcional)', 'audio/mpeg,audio/mp4,audio/ogg'],
     ['caption', 'Legendas WebVTT', 'text/vtt'],
   ];

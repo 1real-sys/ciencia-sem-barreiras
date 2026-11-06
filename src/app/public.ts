@@ -129,9 +129,9 @@ export class PublicPage {
   resources = [
     ['texto', 'Texto'],
     ['fotos', 'Fotos'],
-    ['atividades', 'Atividades'],
     ['libras', 'Libras'],
     ['audiodescricao', 'Audiodescrição'],
+    ['atividades', 'Atividades'],
   ];
   snapshot = signal<Snapshot | null>(null);
   loading = signal(false);

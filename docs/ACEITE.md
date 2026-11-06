@@ -1,5 +1,10 @@
 # Aceite V4 — evidências locais de 04/11/2026
 
+## Atualização: ordem dos recursos e título — 06/11/2026
+
+- Navegação e seções públicas na ordem Texto, Fotos, Libras, Audiodescrição e Atividades, também refletida nas seções correspondentes do editor. Título “Vídeo com audiodescrição” reduzido para “Audiodescrição” no site, prévia e painel.
+- Tipos, lint e build com base `/ciencia-sem-barreiras/` aprovados. Os 14 cenários Playwright passaram, incluindo conferência da ordem dos links/seções e do título nos nove ambientes, além dos fluxos de PDFs e múltiplas fotos. Validação local com simulador; deploy Pages ainda depende do workflow após o push.
+
 ## Atualização: PDFs e seleção de várias fotos — 06/11/2026
 
 - Texto agora aceita PDFs além dos blocos do editor; nova seção/atalho Atividades recebe PDFs. Links públicos identificam o formato e a abertura em nova aba. PDF com título e crédito, substituição, remoção, exibição por arquivo, prévia privada e publicação pelo mesmo fluxo de mídia. Desabilitar Texto também retira seus PDFs da publicação; Atividades é independente. Não foram criados jogos.
