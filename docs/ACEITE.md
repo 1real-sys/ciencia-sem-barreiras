@@ -1,5 +1,10 @@
 # Aceite V4 — evidências locais de 04/11/2026
 
+## Atualização: retirada da seção de áudio de 06/11/2026
+
+- A pedido do responsável, removidos “Ouça o conteúdo” e o atalho “Áudio” da apresentação dos ambientes. “Vídeo com audiodescrição” e Libras continuam disponíveis. Registros de mídia existentes não foram apagados.
+- `npm run check`, `npm run lint`, `npm test` (30 testes) e build com base `/ciencia-sem-barreiras/` aprovados. Os 13 cenários Playwright passaram com o Chromium local indicado abaixo, incluindo verificação nos nove ambientes de ausência da seção/atalho de áudio e permanência do título de vídeo com audiodescrição. Validação local com API simulada; deploy hospedado não verificado nesta execução.
+
 ## Atualização: capas fotográficas de 06/11/2026
 
 - Sete JPEGs fornecidos em `imagens/` associados pelo nome aos ambientes na home, listagem e dashboard administrativo; origem e mapeamento registrados em `imagens/README.md`. Fotos identificadas como “Fotografia”, sem filtro de cor; os dois ambientes sem foto mantêm as ilustrações. Os originais foram preservados.

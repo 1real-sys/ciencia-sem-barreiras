@@ -48,42 +48,32 @@ import { Content } from '../../shared/content';
         <p class="pending">Conteúdo em preparação</p>
       }
     </section>
-    @for (kind of ['libras', 'audiodescricao', 'audio']; track kind) {
+    @for (kind of ['libras', 'audiodescricao']; track kind) {
       <section [id]="kind" tabindex="-1">
         <h2>
-          {{
-            kind === 'libras'
-              ? 'Veja em Libras'
-              : kind === 'audio'
-                ? 'Ouça o conteúdo'
-                : 'Vídeo com audiodescrição'
-          }}
+          {{ kind === 'libras' ? 'Veja em Libras' : 'Vídeo com audiodescrição' }}
         </h2>
         @for (m of content().media; track m.id) {
           @if (m.kind === kind && m.enabled) {
-            @if (kind === 'audio') {
-              <audio controls preload="metadata" [src]="m.url"></audio>
-            } @else {
-              <video
-                crossorigin="anonymous"
-                [poster]="m.poster || ''"
-                controls
-                playsinline
-                preload="metadata"
-                [src]="m.url"
-                [attr.aria-label]="m.alt"
-              >
-                @if (m.caption) {
-                  <track
-                    kind="captions"
-                    srclang="pt-BR"
-                    label="Português"
-                    [src]="m.caption"
-                    default
-                  />
-                }
-              </video>
-            }
+            <video
+              crossorigin="anonymous"
+              [poster]="m.poster || ''"
+              controls
+              playsinline
+              preload="metadata"
+              [src]="m.url"
+              [attr.aria-label]="m.alt"
+            >
+              @if (m.caption) {
+                <track
+                  kind="captions"
+                  srclang="pt-BR"
+                  label="Português"
+                  [src]="m.caption"
+                  default
+                />
+              }
+            </video>
             @if (m.transcript) {
               <details>
                 <summary>Transcrição</summary>

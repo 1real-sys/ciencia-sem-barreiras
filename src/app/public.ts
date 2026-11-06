@@ -131,7 +131,6 @@ export class PublicPage {
     ['fotos', 'Fotos'],
     ['libras', 'Libras'],
     ['audiodescricao', 'Audiodescrição'],
-    ['audio', 'Áudio'],
   ];
   snapshot = signal<Snapshot | null>(null);
   loading = signal(false);
