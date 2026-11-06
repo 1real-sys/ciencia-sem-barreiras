@@ -5,7 +5,7 @@ import { Content } from '../../shared/content';
   template: `
     <section id="texto" tabindex="-1">
       <h2>Vamos conhecer este ambiente?</h2>
-      @if (content().textEnabled && content().blocks.length) {
+      @if (content().textEnabled && (content().blocks.length || has('text_pdf'))) {
         @for (b of content().blocks; track $index) {
           @switch (b.type) {
             @case ('heading') {
@@ -29,6 +29,17 @@ import { Content } from '../../shared/content';
       } @else {
         <p class="pending">Conteúdo em preparação</p>
       }
+      @if (content().textEnabled) {
+        @for (m of content().media; track m.id) {
+          @if (m.kind === 'text_pdf' && m.enabled) {
+            <p>
+              <a [href]="m.url" target="_blank" rel="noopener noreferrer"
+                >{{ m.alt }} (PDF, abre em nova aba)</a
+              ><br /><small>{{ m.credit }}</small>
+            </p>
+          }
+        }
+      }
     </section>
     <section id="fotos" tabindex="-1">
       <h2>Um olhar mais de perto</h2>
@@ -45,6 +56,21 @@ import { Content } from '../../shared/content';
         }
       </div>
       @if (!has('image')) {
+        <p class="pending">Conteúdo em preparação</p>
+      }
+    </section>
+    <section id="atividades" tabindex="-1">
+      <h2>Atividades</h2>
+      @for (m of content().media; track m.id) {
+        @if (m.kind === 'activity_pdf' && m.enabled) {
+          <p>
+            <a [href]="m.url" target="_blank" rel="noopener noreferrer"
+              >{{ m.alt }} (PDF, abre em nova aba)</a
+            ><br /><small>{{ m.credit }}</small>
+          </p>
+        }
+      }
+      @if (!has('activity_pdf')) {
         <p class="pending">Conteúdo em preparação</p>
       }
     </section>

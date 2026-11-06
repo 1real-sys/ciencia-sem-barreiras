@@ -1,15 +1,27 @@
 import { spawn } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import assert from 'node:assert/strict';
+import { mkdtemp, readFile, writeFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { resolve, join } from 'node:path';
 const password = randomUUID() + randomUUID();
 const key = randomUUID() + randomUUID();
+// A small local budget avoids crossing the 60s window on slower machines.
+// Production keeps its configured budget of 6000 requests/minute.
+const smokeDir = await mkdtemp(join(tmpdir(), 'csb-smoke-config-'));
+const smokeConfig = join(smokeDir, 'wrangler.toml');
+const config = (await readFile('worker/wrangler.toml', 'utf8'))
+  .replace('main = "src/index.ts"', 'main = ' + JSON.stringify(resolve('worker/src/index.ts')))
+  .replace('simple = { limit = 6000, period = 60 }', 'simple = { limit = 20, period = 60 }');
+assert.ok(config.includes('simple = { limit = 20, period = 60 }'), 'Local budget override failed');
+await writeFile(smokeConfig, config);
 const child = spawn(
   process.execPath,
   [
     'node_modules/wrangler/bin/wrangler.js',
     'dev',
     '--config',
-    'worker/wrangler.toml',
+    smokeConfig,
     '--port',
     '8789',
     '--persist-to',
@@ -86,7 +98,7 @@ try {
   );
   // Local runtime only: exercise the native limiter without querying a database.
   let throttled = false;
-  for (let i = 0; i < 6500; i++) {
+  for (let i = 0; i < 40; i++) {
     const probe = await fetch(api + '/public/rate-probe', { headers });
     await probe.arrayBuffer();
     if (probe.status === 429) {
@@ -103,4 +115,5 @@ try {
   );
 } finally {
   child.kill('SIGINT');
+  await rm(smokeDir, { recursive: true, force: true });
 }

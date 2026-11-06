@@ -129,6 +129,7 @@ export class PublicPage {
   resources = [
     ['texto', 'Texto'],
     ['fotos', 'Fotos'],
+    ['atividades', 'Atividades'],
     ['libras', 'Libras'],
     ['audiodescricao', 'Audiodescrição'],
   ];

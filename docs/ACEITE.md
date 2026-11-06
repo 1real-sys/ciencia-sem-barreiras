@@ -1,5 +1,16 @@
 # Aceite V4 — evidências locais de 04/11/2026
 
+## Atualização: PDFs e seleção de várias fotos — 06/11/2026
+
+- Texto agora aceita PDFs além dos blocos do editor; nova seção/atalho Atividades recebe PDFs. Links públicos identificam o formato e a abertura em nova aba. PDF com título e crédito, substituição, remoção, exibição por arquivo, prévia privada e publicação pelo mesmo fluxo de mídia. Desabilitar Texto também retira seus PDFs da publicação; Atividades é independente. Não foram criados jogos.
+- Fotos já permitia vários envios sucessivos; agora também permite selecionar várias fotos juntas. Uploads sequenciais preservam o progresso e os arquivos recebidos se houver falha parcial. Limites: 50 MB por arquivo e 40 mídias totais por ambiente.
+- Migração `0004_pdf_documents.sql` adiciona os tipos de documentos ao constraint de mídias e PDF ao MIME permitido dos dois buckets. Testada duas vezes no PGlite, sem duplicar MIME, preservando RLS, formatos existentes e staging privado. Responsável confirmou execução com sucesso no Supabase hospedado nesta conversa.
+- `npm run check`, `npm run lint`, `npm test` (**36 testes**), build com base `/ciencia-sem-barreiras/`, `worker:check` e `worker:smoke` aprovados. Os testes cobrem PDF autorizado, MIME incorreto, falso PDF, limite de tamanho e promoção de PDFs antes da publicação atômica.
+- **14 cenários Playwright aprovados** com Chromium local: upload dos dois PDFs, rascunho invisível ao visitante, publicação e refresh, resposta PDF com bytes conferidos, substituição com URL nova, retirada do PDF de Texto sem afetar Atividades, duas fotos numa seleção e axe-core. A suíte também preservou as verificações existentes de responsividade, teclado, QR, galerias, login e isolamento de rascunho. API simulada nesses cenários; não foi realizado upload autenticado no serviço hospedado.
+- O smoke inicial falhou porque as 6.500 requisições sequenciais não atingiram o limite nativo de 6.000 dentro da janela de um minuto. O teste agora usa configuração temporária com limite 20, faz até 40 sondagens e passou. A configuração de produção permanece 6.000/minuto; login, sessão, logout, revogação, limite persistente e CORS também passaram.
+- PDF recebe validação de MIME, tamanho e cabeçalho de formato no Worker. Não é análise completa ou antivírus; acessibilidade do documento exige revisão editorial. A aplicação disponibiliza links e não injeta conteúdo PDF no HTML.
+- Worker publicado na versão `ac7a8685-fc09-492d-b9ea-858e28e1fb1c`. Smoke cloud repetido após deploy: API pública disponível, acesso a rascunhos/histórico, mutações e upload anônimos negados. Não utiliza senha nem comprova upload/publicação autenticados de PDF em produção.
+
 ## Atualização: retirada da seção de áudio de 06/11/2026
 
 - A pedido do responsável, removidos “Ouça o conteúdo” e o atalho “Áudio” da apresentação dos ambientes. “Vídeo com audiodescrição” e Libras continuam disponíveis. Registros de mídia existentes não foram apagados.

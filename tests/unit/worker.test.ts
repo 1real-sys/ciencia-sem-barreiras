@@ -138,9 +138,13 @@ describe('Worker security boundary', () => {
         expect(await response.json()).toEqual(state === 'published' ? snapshot : null);
     },
   );
-  it.each([false, true])(
-    'handles minimal mutation responses during upload (error: %s)',
-    async (mutationError) => {
+  it.each(
+    [false, true].flatMap((error) =>
+      ['image', 'text_pdf', 'activity_pdf'].map((kind) => ({ error, kind })),
+    ),
+  )(
+    'handles minimal mutation responses during $kind upload (error: $error)',
+    async ({ error: mutationError, kind }) => {
       const { env } = fixture();
       const login = await worker.fetch(
         req('/admin/session', 'POST', { password: env.ADMIN_PASSWORD }),
@@ -148,7 +152,11 @@ describe('Worker security boundary', () => {
       );
       const { token } = await login.json();
       const id = 'ed2f07ae-e9c6-4c71-923c-26422c5ac099';
-      const bytes = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]);
+      const mime = kind === 'image' ? 'image/png' : 'application/pdf';
+      const bytes =
+        kind === 'image'
+          ? new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10])
+          : new TextEncoder().encode('%PDF-1.7\n');
       const result = { data: null, error: mutationError ? { message: 'write denied' } : null };
       const insert = vi.fn(async () => result);
       const update = vi.fn(() => ({ eq: async () => result }));
@@ -165,7 +173,7 @@ describe('Worker security boundary', () => {
                       metadata: {
                         expires: Date.now() + 60000,
                         size: bytes.length,
-                        mime: 'image/png',
+                        mime,
                         validated: false,
                       },
                     },
@@ -192,8 +200,8 @@ describe('Worker security boundary', () => {
           'POST',
           {
             slug: 'diorama-mata-atlantica-2',
-            kind: 'image',
-            mime: 'image/png',
+            kind,
+            mime,
             size: bytes.length,
           },
           token,
@@ -209,7 +217,7 @@ describe('Worker security boundary', () => {
         vi.fn(async (_url, init) =>
           init.method === 'HEAD'
             ? new Response(null, {
-                headers: { 'Content-Length': String(bytes.length), 'Content-Type': 'image/png' },
+                headers: { 'Content-Length': String(bytes.length), 'Content-Type': mime },
               })
             : new Response(bytes),
         ),
@@ -293,6 +301,10 @@ describe('Worker security boundary', () => {
     for (const b of [
       { mime: 'image/svg+xml', size: 10 },
       { mime: 'image/png', size: 52428801 },
+      { kind: 'text_pdf', mime: 'image/png', size: 10 },
+      { kind: 'activity_pdf', mime: 'text/html', size: 10 },
+      { kind: 'activity_pdf', mime: 'application/pdf', size: 52428801 },
+      { kind: 'image', mime: 'application/pdf', size: 10 },
     ])
       expect(
         (
@@ -333,70 +345,73 @@ describe('Worker security boundary', () => {
     expect(result.status).toBe(410);
     expect(fakeDb.storage.from).not.toHaveBeenCalled();
   });
-  it('refuses a valid MIME declaration containing executable bytes', async () => {
-    const { env } = fixture();
-    const r = await worker.fetch(
-      req('/admin/session', 'POST', { password: env.ADMIN_PASSWORD }),
-      env,
-    );
-    const { token } = await r.json();
-    const bytes = new TextEncoder().encode('<svg onload=alert(1)>');
-    fakeDb.from.mockReturnValue({
-      select: () => ({
-        eq: () => ({
-          single: async () => ({
-            data: {
-              object_path: 'test.png',
-              metadata: {
-                expires: Date.now() + 60000,
-                size: bytes.length,
-                mime: 'image/png',
-                validated: false,
+  it.each(['image/png', 'application/pdf'])(
+    'refuses executable bytes declared as %s',
+    async (mime) => {
+      const { env } = fixture();
+      const r = await worker.fetch(
+        req('/admin/session', 'POST', { password: env.ADMIN_PASSWORD }),
+        env,
+      );
+      const { token } = await r.json();
+      const bytes = new TextEncoder().encode('<svg onload=alert(1)>');
+      fakeDb.from.mockReturnValue({
+        select: () => ({
+          eq: () => ({
+            single: async () => ({
+              data: {
+                object_path: 'test.png',
+                metadata: {
+                  expires: Date.now() + 60000,
+                  size: bytes.length,
+                  mime,
+                  validated: false,
+                },
               },
-            },
-            error: null,
+              error: null,
+            }),
           }),
         }),
-      }),
-    });
-    const remove = vi.fn(async () => ({ data: [], error: null }));
-    fakeDb.storage.from.mockReturnValue({
-      createSignedUrl: async () => ({
-        data: { signedUrl: 'https://storage.example/test' },
-        error: null,
-      }),
-      remove,
-    });
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async (_u, init) =>
-        init.method === 'HEAD'
-          ? new Response(null, {
-              headers: { 'Content-Length': String(bytes.length), 'Content-Type': 'image/png' },
-            })
-          : new Response(bytes),
-      ),
-    );
-    try {
-      expect(
-        (
-          await worker.fetch(
-            req(
-              '/admin/uploads/complete',
-              'POST',
-              { id: 'ed2f07ae-e9c6-4c71-923c-26422c5ac099' },
-              token,
-            ),
-            env,
-          )
-        ).status,
-      ).toBe(422);
-      expect(remove).toHaveBeenCalledWith(['test.png']);
-    } finally {
-      vi.unstubAllGlobals();
-    }
-  });
-  it('promotes caption and poster before one atomic publication RPC', async () => {
+      });
+      const remove = vi.fn(async () => ({ data: [], error: null }));
+      fakeDb.storage.from.mockReturnValue({
+        createSignedUrl: async () => ({
+          data: { signedUrl: 'https://storage.example/test' },
+          error: null,
+        }),
+        remove,
+      });
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async (_u, init) =>
+          init.method === 'HEAD'
+            ? new Response(null, {
+                headers: { 'Content-Length': String(bytes.length), 'Content-Type': mime },
+              })
+            : new Response(bytes),
+        ),
+      );
+      try {
+        expect(
+          (
+            await worker.fetch(
+              req(
+                '/admin/uploads/complete',
+                'POST',
+                { id: 'ed2f07ae-e9c6-4c71-923c-26422c5ac099' },
+                token,
+              ),
+              env,
+            )
+          ).status,
+        ).toBe(422);
+        expect(remove).toHaveBeenCalledWith(['test.png']);
+      } finally {
+        vi.unstubAllGlobals();
+      }
+    },
+  );
+  it('promotes PDFs, caption and poster before one atomic publication RPC', async () => {
     const { env } = fixture();
     const login = await worker.fetch(
       req('/admin/session', 'POST', { password: env.ADMIN_PASSWORD }),
@@ -407,6 +422,8 @@ describe('Worker security boundary', () => {
       'ed2f07ae-e9c6-4c71-923c-26422c5ac099',
       'ed2f07ae-e9c6-4c71-923c-26422c5ac098',
       'ed2f07ae-e9c6-4c71-923c-26422c5ac097',
+      'ed2f07ae-e9c6-4c71-923c-26422c5ac096',
+      'ed2f07ae-e9c6-4c71-923c-26422c5ac095',
     ];
     const content = contentSchema.parse({
       ...emptyContent(),
@@ -429,6 +446,14 @@ describe('Worker security boundary', () => {
           transcript: 'Test transcript',
           caption: ids[1],
           poster: ids[0],
+        },
+        { id: ids[3], kind: 'text_pdf', path: 'space/text.pdf', alt: 'Texto', credit: 'QA' },
+        {
+          id: ids[4],
+          kind: 'activity_pdf',
+          path: 'space/activity.pdf',
+          alt: 'Atividade',
+          credit: 'QA',
         },
       ],
     });
@@ -473,7 +498,7 @@ describe('Worker security boundary', () => {
         )
       ).status,
     ).toBe(200);
-    expect(copy).toHaveBeenCalledTimes(3);
+    expect(copy).toHaveBeenCalledTimes(5);
     expect(fakeDb.rpc).toHaveBeenCalledTimes(1);
     const args = fakeDb.rpc.mock.calls[0][1];
     expect(args.p_content.media[2].caption).toBe(
@@ -481,6 +506,10 @@ describe('Worker security boundary', () => {
     );
     expect(args.p_content.media[2].poster).toBe(
       'https://example.supabase.co/public/space/image.png',
+    );
+    expect(args.p_content.media[3].url).toBe('https://example.supabase.co/public/space/text.pdf');
+    expect(args.p_content.media[4].url).toBe(
+      'https://example.supabase.co/public/space/activity.pdf',
     );
     expect(args.p_draft.media[2].caption).toBe(ids[1]);
     fakeDb.rpc.mockClear();
@@ -552,6 +581,12 @@ describe('content and binary validation', () => {
   it('checks magic bytes rather than declared MIME', () => {
     expect(signature('image/png', new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]))).toBe(true);
     expect(signature('image/png', new TextEncoder().encode('<svg onload=alert(1)>'))).toBe(false);
+    expect(signature('application/pdf', new TextEncoder().encode('%PDF-1.7\n'))).toBe(true);
+    expect(signature('application/pdf', new TextEncoder().encode('%PDF-2.0\r\n'))).toBe(true);
+    expect(signature('application/pdf', new TextEncoder().encode('<html>fake.pdf</html>'))).toBe(
+      false,
+    );
+    expect(signature('application/pdf', new TextEncoder().encode('%PDF-FAKE'))).toBe(false);
     expect(signature('image/svg+xml', new TextEncoder().encode('<svg>'))).toBe(false);
     expect(signature('video/mp4', new TextEncoder().encode('0000ftypisom'))).toBe(true);
   });

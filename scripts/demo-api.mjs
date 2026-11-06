@@ -65,6 +65,13 @@ const server = http.createServer(async (req, res) => {
         for await (const c of req) chunks.push(c);
         const bytes = Buffer.concat(chunks);
         if (bytes.length > 50 * 1024 * 1024) return send(413, {});
+        if (
+          upload.mime === 'application/pdf' &&
+          !/^%PDF-(?:1\.[0-7]|2\.0)[\r\n]/.test(bytes.toString('latin1'))
+        )
+          return send(422, {
+            error: 'O conteúdo do arquivo não corresponde ao formato permitido.',
+          });
         await writeFile(dir + '/' + id, bytes);
         upload.validated = true;
         await save();
@@ -147,6 +154,7 @@ const server = http.createServer(async (req, res) => {
           'video/mp4',
           'video/webm',
           'text/vtt',
+          'application/pdf',
         ].includes(b.mime)
       )
         return send(422, { error: 'Formato não permitido.' });
@@ -207,7 +215,7 @@ const server = http.createServer(async (req, res) => {
           )
         )
           return send(422, { error: 'Preencha descrição, crédito e direito de uso.' });
-        c.media = c.media.filter((m) => m.enabled);
+        c.media = c.media.filter((m) => m.enabled && (c.textEnabled || m.kind !== 'text_pdf'));
         for (const m of c.media) {
           if (state.uploads[m.id]) state.uploads[m.id].published = true;
         }

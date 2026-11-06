@@ -35,7 +35,7 @@ npm run worker:check
 npm run worker:smoke
 ```
 
-`npm test` executa Vitest, incluindo PostgreSQL local via PGlite: aplica as três migrações, cria roles de teste e verifica permissões e transações. O teste remove apenas a instrução de extensão `pgcrypto`, pois `gen_random_uuid()` já faz parte desse runtime. O schema Storage usado no teste é mínimo; o serviço Storage real depende da validação cloud.
+`npm test` executa Vitest, incluindo PostgreSQL local via PGlite: aplica as quatro migrações, cria roles de teste e verifica permissões e transações. O teste remove apenas a instrução de extensão `pgcrypto`, pois `gen_random_uuid()` já faz parte desse runtime. O schema Storage usado no teste é mínimo; o serviço Storage real depende da validação cloud.
 
 `npm run test:e2e` inicia frontend e simulador automaticamente em portas isoladas (14200 e 18787), sem reutilizar sessões de desenvolvimento. Execute `npm run build` antes: um dos cenários serve o artefato compilado. Usa `/usr/bin/google-chrome` localmente; altere `CHROME_BIN` se necessário. No CI, instala e usa Chromium do Playwright. Gera screenshots em `test-results/` e relatório em `playwright-report/`. O widget externo VLibras é bloqueado nesses testes para resultados reproduzíveis; os testes não avaliam a tradução do widget.
 
@@ -43,7 +43,7 @@ npm run worker:smoke
 
 ## Configuração real: responsável técnico
 
-1. Crie um projeto Supabase dedicado. Aplique **na ordem** `0001_init.sql`, `0002_publication.sql` e `0003_mata_atlantica_2.sql` pelo SQL Editor do responsável ou CLI. As migrações criam nove ambientes, buckets, RLS e duas funções transacionais. Não repetir a segunda migração em banco já migrado.
+1. Crie um projeto Supabase dedicado. Aplique **na ordem** `0001_init.sql`, `0002_publication.sql`, `0003_mata_atlantica_2.sql` e `0004_pdf_documents.sql` pelo SQL Editor do responsável ou CLI. As migrações criam nove ambientes, buckets, RLS e duas funções transacionais. Não repetir a segunda migração em banco já migrado.
 2. Em projeto existente, revise políticas em `storage.objects`: não deve haver política de escrita anônima nem leitura do bucket staging. Não reutilize um projeto com políticas permissivas sem revisão. Guarde backup antes de migrar dados existentes.
 3. Configure `worker/wrangler.toml`: `ALLOWED_ORIGINS` é uma lista de origins exatos separados por vírgula, sem barra final nem caminho. Exemplo: `https://DONO.github.io`. Deixe localhost apenas se o desenvolvimento remoto for necessário. `EXTERNAL_MEDIA_HOSTS` é uma lista explícita de hostnames autorizados para URLs diretas HTTPS de vídeo, sem espaços; vazia bloqueia vídeos externos.
 4. Cadastre os secrets interativamente, sem colocá-los em arquivos públicos:
@@ -109,3 +109,13 @@ O smoke verifica negativas de leitura/escrita, RPC e Storage anônimos, além da
 ## Correção: dois dioramas da Mata Atlântica
 
 O total agora é nove ambientes. O diorama existente passa a se chamar **Diorama da Mata Atlântica 1**, preservando `/#/ambientes/diorama-mata-atlantica` e todos os registros. O segundo usa `/#/ambientes/diorama-mata-atlantica-2`. Em banco já configurado com 0001 e 0002, aplique apenas `0003_mata_atlantica_2.sql`; não refaça as migrações anteriores. Os dois ambientes têm conteúdo, mídias e QR independentes.
+
+## PDFs de Texto e Atividades
+
+Em projeto já atualizado até 0003, executar apenas `supabase/migrations/0004_pdf_documents.sql` no SQL Editor do responsável e publicar o Worker (`npm run worker:deploy`) antes do frontend. A migração é transacional e pode ser repetida: adiciona `text_pdf`/`activity_pdf` ao constraint de mídias e `application/pdf` aos dois buckets, preservando dados, RLS e visibilidade. Não repetir 0002.
+
+Em Texto, o campo “Anexar PDF do texto” complementa o editor de parágrafos. Em Atividades, “Anexar Atividades” recebe PDFs. É possível anexar mais documentos repetindo a seleção. Cada PDF tem título, crédito, exibição, substituição e remoção; a prévia abre o arquivo em nova aba. “Exibir texto ao publicar” controla também os PDFs de Texto. Atividades tem controle independente por arquivo e link público `?recurso=atividades`.
+
+Fotos aceita várias imagens na mesma seleção e adições posteriores. Limite de 50 MB por arquivo e 40 recursos no total por ambiente. Se um envio múltiplo falhar, os arquivos já recebidos ficam no editor para salvar; a mensagem informa quantos chegaram. Selecione apenas os restantes para repetir.
+
+A publicação mantém staging privado e URLs temporárias, promovendo PDFs junto das demais mídias antes da troca atômica do snapshot. O servidor valida MIME, tamanho e assinatura `%PDF-1.x`/`%PDF-2.0`; essa checagem não equivale a análise completa de conteúdo ou antivírus. PDFs são links em nova aba, sem inserir conteúdo no HTML da aplicação. Acessibilidade do documento depende de texto selecionável, estrutura e revisão editorial do próprio PDF.

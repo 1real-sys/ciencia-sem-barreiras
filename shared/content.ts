@@ -15,9 +15,18 @@ export interface Block {
   bold: boolean;
   url: string;
 }
+export const MEDIA_KINDS = [
+  'image',
+  'audio',
+  'libras',
+  'audiodescricao',
+  'caption',
+  'text_pdf',
+  'activity_pdf',
+] as const;
 export interface Media {
   id: string;
-  kind: 'image' | 'audio' | 'libras' | 'audiodescricao' | 'caption';
+  kind: (typeof MEDIA_KINDS)[number];
   url: string;
   path: string;
   alt: string;
@@ -52,4 +61,18 @@ export const MIME: Record<string, string> = {
   'video/mp4': 'mp4',
   'video/webm': 'webm',
   'text/vtt': 'vtt',
+  'application/pdf': 'pdf',
 };
+
+export function allowedMediaType(kind: string, mime: string): boolean {
+  const types: Record<Media['kind'], readonly string[]> = {
+    image: ['image/jpeg', 'image/png', 'image/webp'],
+    audio: ['audio/mpeg', 'audio/mp4', 'audio/ogg'],
+    libras: ['video/mp4', 'video/webm'],
+    audiodescricao: ['video/mp4', 'video/webm'],
+    caption: ['text/vtt'],
+    text_pdf: ['application/pdf'],
+    activity_pdf: ['application/pdf'],
+  };
+  return MEDIA_KINDS.includes(kind as Media['kind']) && types[kind as Media['kind']].includes(mime);
+}

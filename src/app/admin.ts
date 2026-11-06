@@ -1,4 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import QRCode from 'qrcode';
@@ -11,7 +12,7 @@ import {
   Snapshot,
   SPACES,
   emptyContent,
-  MIME,
+  allowedMediaType,
   MAX_FILE,
 } from '../../shared/content';
 interface EditorData {
@@ -21,7 +22,7 @@ interface EditorData {
 }
 @Component({
   selector: 'app-admin',
-  imports: [FormsModule, RouterLink, ContentView],
+  imports: [FormsModule, RouterLink, ContentView, NgTemplateOutlet],
   template: `
     @if (!data.token()) {
       <div class="login">
@@ -127,91 +128,20 @@ interface EditorData {
                 >
                   Adicionar parte
                 </button>
+                <ng-container
+                  [ngTemplateOutlet]="mediaFields"
+                  [ngTemplateOutletContext]="{ $implicit: kinds[0] }"
+                />
               </section>
-              @for (kind of kinds; track kind[0]) {
+              @for (kind of kinds.slice(1); track kind[0]) {
                 <section class="panel">
-                  <h2>{{ kind[1] }}</h2>
-                  <label [for]="'upload-' + kind[0]">Anexar {{ kind[1] }} (máximo 50 MB)</label
-                  ><input
-                    [id]="'upload-' + kind[0]"
-                    type="file"
-                    [accept]="kind[2]"
-                    (change)="upload($event, kind[0])"
-                    [disabled]="busy()"
+                  <ng-container
+                    [ngTemplateOutlet]="mediaFields"
+                    [ngTemplateOutletContext]="{ $implicit: kind }"
                   />
-                  @if (kind[0] === 'libras' || kind[0] === 'audiodescricao') {
-                    <button class="secondary" (click)="external(kind[0])">
-                      Adicionar vídeo por endereço HTTPS
-                    </button>
-                  }
-                  @for (m of content.media; track m.id; let i = $index) {
-                    @if (m.kind === kind[0]) {
-                      <div class="media-editor">
-                        <label
-                          ><input type="checkbox" [(ngModel)]="m.enabled" />Exibir este recurso ao
-                          publicar</label
-                        ><label [for]="'alt-' + m.id">{{
-                          m.kind === 'image' ? 'Descrição da imagem' : 'Descrição do recurso'
-                        }}</label
-                        ><textarea [id]="'alt-' + m.id" [(ngModel)]="m.alt"></textarea
-                        ><label [for]="'credit-' + m.id">Crédito e licença</label
-                        ><input [id]="'credit-' + m.id" [(ngModel)]="m.credit" />
-                        @if (m.kind === 'image') {
-                          <label
-                            ><input type="checkbox" [(ngModel)]="m.illustration" />É uma
-                            ilustração</label
-                          ><label
-                            ><input type="checkbox" [(ngModel)]="m.rights" />Confirmo o direito de
-                            uso desta imagem</label
-                          ><button class="secondary" (click)="cover(i)">Definir como capa</button>
-                        }
-                        @if (!m.path) {
-                          <label [for]="'external-' + m.id"
-                            >URL direta do vídeo HTTPS (domínio autorizado)</label
-                          ><input [id]="'external-' + m.id" [(ngModel)]="m.url" type="url" />
-                        }
-                        @if (m.kind !== 'image' && m.kind !== 'caption') {
-                          <label [for]="'transcript-' + m.id">Transcrição</label
-                          ><textarea
-                            [id]="'transcript-' + m.id"
-                            [(ngModel)]="m.transcript"
-                          ></textarea>
-                          @if (m.kind !== 'audio') {
-                            <label [for]="'poster-' + m.id">Pôster do vídeo</label
-                            ><select [id]="'poster-' + m.id" [(ngModel)]="m.poster">
-                              <option value="">Sem pôster</option>
-                              @for (p of content.media; track p.id) {
-                                @if (p.kind === 'image') {
-                                  <option [value]="p.url">{{ p.alt || 'Imagem enviada' }}</option>
-                                }
-                              }
-                            </select>
-                            <label [for]="'caption-' + m.id">Legenda WebVTT</label
-                            ><select [id]="'caption-' + m.id" [(ngModel)]="m.caption">
-                              <option value="">Sem legenda</option>
-                              @for (c of content.media; track c.id) {
-                                @if (c.kind === 'caption') {
-                                  <option [value]="c.url">{{ c.alt || 'Legenda enviada' }}</option>
-                                }
-                              }
-                            </select>
-                          }
-                        }
-                        <label [for]="'replace-' + m.id">Substituir arquivo</label
-                        ><input
-                          [id]="'replace-' + m.id"
-                          type="file"
-                          [accept]="kind[2]"
-                          (change)="upload($event, kind[0], i)"
-                          [disabled]="busy()"
-                        /><button class="secondary" (click)="removeMedia(i)">
-                          Remover recurso
-                        </button>
-                      </div>
-                    }
-                  }
                 </section>
               }
+
               <section class="panel">
                 <h2>Recuperar uma publicação</h2>
                 <p>A recuperação cria um rascunho. Revise e publique para alterar o site.</p>
@@ -264,6 +194,104 @@ interface EditorData {
         </fieldset>
       }
     }
+    <ng-template #mediaFields let-kind>
+      @if (kind[0] !== 'text_pdf') {
+        <h2>{{ kind[1] }}</h2>
+      }
+      <label [for]="'upload-' + kind[0]">Anexar {{ kind[1] }} (máximo 50 MB)</label
+      ><input
+        [id]="'upload-' + kind[0]"
+        type="file"
+        [accept]="kind[2]"
+        [multiple]="kind[0] === 'image'"
+        (change)="upload($event, kind[0])"
+        [disabled]="busy()"
+      />
+      @if (kind[0] === 'image') {
+        <p>Você pode selecionar várias fotos de uma vez ou adicionar outras depois.</p>
+      }
+      @if (kind[0] === 'text_pdf' || kind[0] === 'activity_pdf') {
+        <p>
+          Envie um PDF, informe o título e o crédito. O arquivo aparece no site após publicar.
+          Prefira PDFs com texto selecionável e leitura acessível.
+        </p>
+      }
+      @if (kind[0] === 'libras' || kind[0] === 'audiodescricao') {
+        <button class="secondary" (click)="external(kind[0])">
+          Adicionar vídeo por endereço HTTPS
+        </button>
+      }
+      @for (m of content.media; track m.id; let i = $index) {
+        @if (m.kind === kind[0]) {
+          <div class="media-editor">
+            <label
+              ><input type="checkbox" [(ngModel)]="m.enabled" />Exibir este recurso ao
+              publicar</label
+            ><label [for]="'alt-' + m.id">{{
+              m.kind === 'image'
+                ? 'Descrição da imagem'
+                : m.kind === 'text_pdf' || m.kind === 'activity_pdf'
+                  ? 'Título do PDF'
+                  : 'Descrição do recurso'
+            }}</label
+            ><textarea [id]="'alt-' + m.id" [(ngModel)]="m.alt"></textarea
+            ><label [for]="'credit-' + m.id">Crédito e licença</label
+            ><input [id]="'credit-' + m.id" [(ngModel)]="m.credit" />
+            @if (m.kind === 'image') {
+              <label><input type="checkbox" [(ngModel)]="m.illustration" />É uma ilustração</label
+              ><label
+                ><input type="checkbox" [(ngModel)]="m.rights" />Confirmo o direito de uso desta
+                imagem</label
+              ><button class="secondary" (click)="cover(i)">Definir como capa</button>
+            }
+            @if (!m.path) {
+              <label [for]="'external-' + m.id"
+                >URL direta do vídeo HTTPS (domínio autorizado)</label
+              ><input [id]="'external-' + m.id" [(ngModel)]="m.url" type="url" />
+            }
+            @if (m.kind === 'audio' || m.kind === 'libras' || m.kind === 'audiodescricao') {
+              <label [for]="'transcript-' + m.id">Transcrição</label
+              ><textarea [id]="'transcript-' + m.id" [(ngModel)]="m.transcript"></textarea>
+              @if (m.kind !== 'audio') {
+                <label [for]="'poster-' + m.id">Pôster do vídeo</label
+                ><select [id]="'poster-' + m.id" [(ngModel)]="m.poster">
+                  <option value="">Sem pôster</option>
+                  @for (p of content.media; track p.id) {
+                    @if (p.kind === 'image') {
+                      <option [value]="p.url">{{ p.alt || 'Imagem enviada' }}</option>
+                    }
+                  }
+                </select>
+                <label [for]="'caption-' + m.id">Legenda WebVTT</label
+                ><select [id]="'caption-' + m.id" [(ngModel)]="m.caption">
+                  <option value="">Sem legenda</option>
+                  @for (c of content.media; track c.id) {
+                    @if (c.kind === 'caption') {
+                      <option [value]="c.url">{{ c.alt || 'Legenda enviada' }}</option>
+                    }
+                  }
+                </select>
+              }
+            }
+            @if (m.kind === 'text_pdf' || m.kind === 'activity_pdf') {
+              <p>
+                <a [href]="m.url" target="_blank" rel="noopener noreferrer"
+                  >Abrir PDF em nova aba</a
+                >
+              </p>
+            }
+            <label [for]="'replace-' + m.id">Substituir arquivo</label
+            ><input
+              [id]="'replace-' + m.id"
+              type="file"
+              [accept]="kind[2]"
+              (change)="upload($event, kind[0], i)"
+              [disabled]="busy()"
+            /><button class="secondary" (click)="removeMedia(i)">Remover recurso</button>
+          </div>
+        }
+      }
+    </ng-template>
     @if (busy() && progress() >= 0) {
       <label for="progress">Enviando arquivo: {{ progress() }}%</label
       ><progress id="progress" max="100" [value]="progress()"></progress>
@@ -288,6 +316,8 @@ export class Admin {
   qrPng = signal('');
   qrSvg = signal('');
   kinds = [
+    ['text_pdf', 'PDF do texto', 'application/pdf'],
+    ['activity_pdf', 'Atividades', 'application/pdf'],
     ['image', 'Fotos', 'image/jpeg,image/png,image/webp'],
     ['libras', 'Vídeo em Libras', 'video/mp4,video/webm'],
     ['audiodescricao', 'Vídeo com audiodescrição', 'video/mp4,video/webm'],
@@ -436,39 +466,61 @@ export class Admin {
   }
   async upload(event: Event, kind: string, index?: number) {
     const input = event.target as HTMLInputElement;
-    const f = input.files?.[0];
-    if (!f) return;
+    const files = Array.from(input.files || []);
+    if (!files.length) return;
     if (index !== undefined && !confirm('Substituir este arquivo no rascunho?')) return;
-    if (f.size > MAX_FILE || !MIME[f.type]) {
-      this.message.set('Escolha um formato permitido com até 50 MB.');
+    if (files.some((f) => f.size <= 0 || f.size > MAX_FILE || !allowedMediaType(kind, f.type))) {
+      this.message.set('Escolha um formato permitido com até 50 MB por arquivo.');
+      input.value = '';
+      return;
+    }
+    if (this.content.media.length + (index === undefined ? files.length : 0) > 40) {
+      this.message.set(
+        'Cada ambiente aceita até 40 arquivos. Remova um recurso antes de adicionar outros.',
+      );
       input.value = '';
       return;
     }
     await this.run(async () => {
-      this.progress.set(0);
-      const m = await this.data.upload(f, this.slug(), kind, (n) => this.progress.set(n));
-      const old = index !== undefined ? this.content.media[index] : undefined;
-      const media: Media = {
-        id: m.id,
-        kind: kind as Media['kind'],
-        path: m.path,
-        url: m.url,
-        alt: old?.alt || '',
-        credit: old?.credit || '',
-        illustration: old?.illustration ?? true,
-        rights: old?.rights ?? false,
-        transcript: old?.transcript || '',
-        caption: old?.caption || '',
-        poster: old?.poster || '',
-        enabled: true,
-      };
-      if (index !== undefined) this.content.media[index] = media;
-      else this.content.media.push(media);
-      if (old) this.updateReferences(old, media.url);
-      this.message.set('Arquivo recebido. Preencha os detalhes e salve o rascunho.');
+      let received = 0;
+      try {
+        for (const f of files) {
+          this.progress.set(0);
+          const m = await this.data.upload(f, this.slug(), kind, (n) => this.progress.set(n));
+          const old = index !== undefined ? this.content.media[index] : undefined;
+          const media: Media = {
+            id: m.id,
+            kind: kind as Media['kind'],
+            path: m.path,
+            url: m.url,
+            alt: old?.alt || (f.type === 'application/pdf' ? f.name.replace(/\.pdf$/i, '') : ''),
+            credit: old?.credit || '',
+            illustration: old?.illustration ?? true,
+            rights: old?.rights ?? false,
+            transcript: old?.transcript || '',
+            caption: old?.caption || '',
+            poster: old?.poster || '',
+            enabled: true,
+          };
+          if (index !== undefined) this.content.media[index] = media;
+          else this.content.media.push(media);
+          if (old) this.updateReferences(old, media.url);
+          received++;
+        }
+      } catch (error) {
+        throw new Error(
+          `${received} de ${files.length} arquivos recebidos. ${error instanceof Error ? error.message : 'Envio falhou.'} Os arquivos recebidos estão no editor; salve o rascunho e selecione os restantes para tentar novamente.`,
+        );
+      }
+      this.message.set(
+        files.length === 1
+          ? 'Arquivo recebido. Preencha os detalhes e salve o rascunho.'
+          : `${received} arquivos recebidos. Preencha os detalhes e salve o rascunho.`,
+      );
     });
     input.value = '';
   }
+
   async restore(revision: number) {
     if (!confirm('Recuperar esta versão como rascunho? As alterações atuais serão substituídas.'))
       return;

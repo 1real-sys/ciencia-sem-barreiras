@@ -194,3 +194,93 @@ test('network failure provides a retry', async ({ page }) => {
   await expect(page.getByRole('alert')).toContainText('Não foi possível buscar');
   await expect(page.getByRole('button', { name: 'Tentar novamente' })).toBeVisible();
 });
+
+test('PDFs in Texto and Atividades and multiple photos stay private until publication', async ({
+  page,
+}) => {
+  page.on('dialog', (dialog) => dialog.accept());
+  await page.goto('/#/admin');
+  await page.getByLabel('Senha de acesso').fill('local-testing-password-2026');
+  await page.getByRole('button', { name: 'Entrar', exact: true }).click();
+  await page
+    .locator('.space-card')
+    .filter({ hasText: 'Aquário Lagoa' })
+    .getByRole('button', { name: 'Editar' })
+    .click();
+  const pdf = await readFile('tests/fixtures/document.pdf');
+  for (const [kind, name] of [
+    ['text_pdf', 'Texto para leitura'],
+    ['activity_pdf', 'Atividade em PDF'],
+  ]) {
+    await page
+      .locator('#upload-' + kind)
+      .setInputFiles({ name: name + '.pdf', mimeType: 'application/pdf', buffer: pdf });
+    await expect(page.getByRole('status')).toContainText('Arquivo recebido');
+    const resource = page.locator('.media-editor').last();
+    await resource.getByLabel('Título do PDF').fill(name);
+    await resource.getByLabel('Crédito e licença').fill('Documento de teste criado para QA');
+    await expect(resource.getByRole('link', { name: 'Abrir PDF em nova aba' })).toHaveAttribute(
+      'target',
+      '_blank',
+    );
+  }
+  const png = Buffer.from(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a/p8AAAAASUVORK5CYII=',
+    'base64',
+  );
+  const photos = page.getByLabel('Anexar Fotos (máximo 50 MB)');
+  await expect(photos).toHaveAttribute('multiple', '');
+  await photos.setInputFiles(
+    ['Primeira foto', 'Segunda foto'].map((name) => ({
+      name: name + '.png',
+      mimeType: 'image/png',
+      buffer: png,
+    })),
+  );
+  await expect(page.getByRole('status')).toContainText('2 arquivos recebidos');
+  const images = page
+    .locator('.media-editor')
+    .filter({ has: page.getByLabel('Descrição da imagem', { exact: true }) });
+  await expect(images).toHaveCount(2);
+  for (let i = 0; i < 2; i++) {
+    await images
+      .nth(i)
+      .getByLabel('Descrição da imagem', { exact: true })
+      .fill('Foto de teste ' + i);
+    await images.nth(i).getByLabel('Crédito e licença').fill('Criada para QA');
+    await images.nth(i).getByLabel('Confirmo o direito de uso desta imagem').check();
+  }
+  await page.getByRole('button', { name: 'Salvar rascunho', exact: true }).click();
+  await expect(page.getByRole('status')).toContainText('Rascunho salvo');
+  const visitor = await page.context().newPage();
+  await visitor.goto('/#/ambientes/aquario-lagoa?recurso=atividades');
+  await expect(visitor.locator('#atividades')).toBeFocused();
+  await expect(visitor.locator('#texto a, #atividades a')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Publicar', exact: true }).click();
+  await expect(page.getByRole('status')).toContainText('Atualização publicada');
+  await visitor.reload();
+  await expect(visitor.locator('#texto a')).toContainText('Texto para leitura');
+  await expect(visitor.locator('#texto .pending')).toHaveCount(0);
+  await expect(visitor.locator('#atividades a')).toContainText('Atividade em PDF');
+  await expect(visitor.locator('#fotos img')).toHaveCount(2);
+  const previous = await visitor.locator('#atividades a').getAttribute('href');
+  const response = await visitor.request.get(previous!);
+  expect(response.headers()['content-type']).toBe('application/pdf');
+  expect(await response.body()).toEqual(pdf);
+  const activity = page
+    .locator('.media-editor')
+    .filter({ has: page.getByLabel('Título do PDF', { exact: true }) })
+    .last();
+  await activity
+    .getByLabel('Substituir arquivo')
+    .setInputFiles({ name: 'Substituida.pdf', mimeType: 'application/pdf', buffer: pdf });
+  await expect(page.getByRole('status')).toContainText('Arquivo recebido');
+  await page.getByLabel('Exibir texto ao publicar').uncheck();
+  await page.getByRole('button', { name: 'Publicar', exact: true }).click();
+  await expect(page.getByRole('status')).toContainText('Atualização publicada');
+  await visitor.reload();
+  await expect(visitor.locator('#texto a')).toHaveCount(0);
+  await expect(visitor.locator('#atividades a')).not.toHaveAttribute('href', previous!);
+  expect((await new AxeBuilder({ page: visitor }).analyze()).violations).toEqual([]);
+  await visitor.close();
+});

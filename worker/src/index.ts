@@ -1,6 +1,13 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { z } from 'zod';
-import { Content, emptyContent, MAX_FILE, MIME } from '../../shared/content';
+import {
+  Content,
+  emptyContent,
+  MAX_FILE,
+  MIME,
+  MEDIA_KINDS,
+  allowedMediaType,
+} from '../../shared/content';
 import { contentSchema, slugSchema } from '../../shared/schema';
 export interface Env {
   ADMIN_PASSWORD: string;
@@ -248,6 +255,7 @@ async function prefix(response: Response, limit = 4096) {
 }
 export function signature(mime: string, b: Uint8Array) {
   const ascii = new TextDecoder().decode(b);
+  if (mime === 'application/pdf') return /^%PDF-(?:1\.[0-7]|2\.0)[\r\n]/.test(ascii);
   if (mime === 'image/png') return [137, 80, 78, 71, 13, 10, 26, 10].every((v, i) => b[i] === v);
   if (mime === 'image/jpeg') return b[0] === 255 && b[1] === 216 && b[2] === 255;
   if (mime === 'image/webp') return ascii.startsWith('RIFF') && ascii.slice(8, 12) === 'WEBP';
@@ -426,7 +434,7 @@ async function handle(request: Request, env: Env) {
       const b = z
         .object({
           revision: z.number().int(),
-          section: z.enum(['texto', 'image', 'audio', 'libras', 'audiodescricao']).optional(),
+          section: z.enum(['texto', ...MEDIA_KINDS]).optional(),
         })
         .parse(await body(request));
       const draft = checked(
@@ -444,7 +452,7 @@ async function handle(request: Request, env: Env) {
       }
       const pub = structuredClone(c);
       if (!pub.textEnabled) pub.blocks = [];
-      pub.media = pub.media.filter((m) => m.enabled);
+      pub.media = pub.media.filter((m) => m.enabled && (pub.textEnabled || m.kind !== 'text_pdf'));
       for (const m of pub.media) {
         if (m.path) {
           const copied = await client.storage
@@ -486,19 +494,12 @@ async function handle(request: Request, env: Env) {
     const b = z
       .object({
         slug: slugSchema,
-        kind: z.enum(['image', 'audio', 'libras', 'audiodescricao', 'caption']),
+        kind: z.enum(MEDIA_KINDS),
         mime: z.string(),
         size: z.number().int().positive().max(MAX_FILE),
       })
       .parse(await body(request));
-    if (
-      !MIME[b.mime] ||
-      (b.kind === 'image' && !b.mime.startsWith('image/')) ||
-      (b.kind === 'audio' && !b.mime.startsWith('audio/')) ||
-      (['libras', 'audiodescricao'].includes(b.kind) && !b.mime.startsWith('video/')) ||
-      (b.kind === 'caption' && b.mime !== 'text/vtt')
-    )
-      fail(422, 'Formato de arquivo não permitido.');
+    if (!allowedMediaType(b.kind, b.mime)) fail(422, 'Formato de arquivo não permitido.');
     const s = await space(client, b.slug);
     const id = crypto.randomUUID();
     const objectPath = s.id + '/' + id + '.' + MIME[b.mime];

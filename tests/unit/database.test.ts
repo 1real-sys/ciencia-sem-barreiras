@@ -27,6 +27,9 @@ beforeAll(async () => {
   const correction = await readFile('supabase/migrations/0003_mata_atlantica_2.sql', 'utf8');
   await db.exec(correction);
   await db.exec(correction);
+  const pdfMigration = await readFile('supabase/migrations/0004_pdf_documents.sql', 'utf8');
+  await db.exec(pdfMigration);
+  await db.exec(pdfMigration);
   id = (await db.query<{ id: string }>("select id from spaces where slug='aquario-marinho'"))
     .rows[0].id;
 }, 60000);
@@ -43,6 +46,29 @@ describe('PostgreSQL migrations and permission boundaries', () => {
         )
       ).rows[0].public,
     ).toBe(false);
+  });
+  it('accepts PDF document kinds and enables PDF MIME exactly once in both buckets', async () => {
+    const buckets = (
+      await db.query<{ allowed_mime_types: string[] }>(
+        'select allowed_mime_types from storage.buckets',
+      )
+    ).rows;
+    for (const bucket of buckets) {
+      expect(bucket.allowed_mime_types.filter((m) => m === 'application/pdf')).toHaveLength(1);
+      expect(bucket.allowed_mime_types).toContain('image/png');
+    }
+    for (const kind of ['text_pdf', 'activity_pdf']) {
+      await db.query(
+        "insert into space_media(space_id,kind,storage_bucket,object_path) values($1,$2,'csb-staging-media','test.pdf')",
+        [id, kind],
+      );
+    }
+    await expect(
+      db.query(
+        "insert into space_media(space_id,kind,storage_bucket,object_path) values($1,'script','csb-staging-media','test.js')",
+        [id],
+      ),
+    ).rejects.toThrow(/check constraint/);
   });
   it('renames the first diorama without losing its ID or draft and adds the second once', async () => {
     const rows = (
