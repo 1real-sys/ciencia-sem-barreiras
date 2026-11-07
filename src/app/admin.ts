@@ -6,6 +6,7 @@ import QRCode from 'qrcode';
 import { Data } from './data';
 import { ContentView } from './content-view';
 import { PdfViewer } from './pdf-viewer';
+import { prepareUploadFile } from '../../shared/audio-upload';
 import { spaceCover } from './covers';
 import {
   Content,
@@ -15,7 +16,6 @@ import {
   emptyContent,
   allowedMediaType,
   AUDIO_ACCEPT,
-  normalizedMime,
   isAudioMedia,
   MAX_FILE,
 } from '../../shared/content';
@@ -213,8 +213,8 @@ interface EditorData {
       />
       @if (kind[0] === 'audiodescricao') {
         <p>
-          Somente áudio: MP3, AAC, WMA, WAV, M4A, OGG/Opus ou FLAC. Até 50 MB. Prefira MP3 para
-          facilitar a reprodução nos celulares.
+          Somente áudio: MP3, AAC, WMA, WAV, M4A/MP4 (sem vídeo), OGG/Opus ou FLAC. Até 50 MB.
+          Prefira MP3 para facilitar a reprodução nos celulares.
         </p>
       }
       @if (kind[0] === 'image') {
@@ -475,13 +475,10 @@ export class Admin {
   }
   async upload(event: Event, kind: string, index?: number) {
     const input = event.target as HTMLInputElement;
-    const files = Array.from(input.files || []).map((file) => {
-      const mime = normalizedMime(file.type, file.name);
-      return mime === file.type ? file : new File([file], file.name, { type: mime });
-    });
+    const files = Array.from(input.files || []);
     if (!files.length) return;
     if (index !== undefined && !confirm('Substituir este arquivo no rascunho?')) return;
-    if (files.some((f) => f.size <= 0 || f.size > MAX_FILE || !allowedMediaType(kind, f.type))) {
+    if (files.some((f) => f.size <= 0 || f.size > MAX_FILE)) {
       this.message.set('Escolha um formato permitido com até 50 MB por arquivo.');
       input.value = '';
       return;
@@ -496,7 +493,10 @@ export class Admin {
     await this.run(async () => {
       let received = 0;
       try {
-        for (const f of files) {
+        for (const file of files) {
+          const f = await prepareUploadFile(file, kind);
+          if (!allowedMediaType(kind, f.type))
+            throw Error('Escolha um formato permitido com até 50 MB por arquivo.');
           this.progress.set(0);
           const m = await this.data.upload(f, this.slug(), kind, (n) => this.progress.set(n));
           const old = index !== undefined ? this.content.media[index] : undefined;
@@ -522,7 +522,7 @@ export class Admin {
         }
       } catch (error) {
         throw new Error(
-          `${received} de ${files.length} arquivos recebidos. ${error instanceof Error ? error.message : 'Envio falhou.'} Os arquivos recebidos estão no editor; salve o rascunho e selecione os restantes para tentar novamente.`,
+          `${received} de ${files.length} arquivos recebidos. ${error instanceof Error ? error.message : 'Envio falhou.'} ${received ? 'Os arquivos recebidos estão no editor; salve o rascunho e selecione os restantes para tentar novamente.' : 'Nenhum arquivo foi adicionado. Confira o formato e tente novamente.'}`,
         );
       }
       this.message.set(

@@ -1,5 +1,6 @@
 // LOCAL TEST DOUBLE ONLY. Production uses worker/src/index.ts and Supabase.
 import http from 'node:http';
+import { audioOnly } from '../worker/src/audio.ts';
 import { randomUUID, timingSafeEqual, createHash } from 'node:crypto';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 const password = process.env.DEMO_PASSWORD;
@@ -71,6 +72,13 @@ const server = http.createServer(async (req, res) => {
         )
           return send(422, {
             error: 'O conteúdo do arquivo não corresponde ao formato permitido.',
+          });
+        if (
+          upload.mime.startsWith('audio/') &&
+          !(await audioOnly(upload.mime, bytes.length, async (at, n) => bytes.subarray(at, at + n)))
+        )
+          return send(422, {
+            error: 'Audiodescrição aceita somente arquivos de áudio válidos, sem vídeo.',
           });
         await writeFile(dir + '/' + id, bytes);
         upload.validated = true;

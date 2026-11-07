@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { readFile } from 'node:fs/promises';
 import { audioOnly, audioSignature } from '../../worker/src/audio';
 import { allowedMediaType, normalizedMime, isAudioMedia } from '../../shared/content';
+import { prepareUploadFile } from '../../shared/audio-upload';
 import { contentSchema } from '../../shared/schema';
 
 const formats = [
@@ -20,6 +21,33 @@ describe('Audio-only descriptions', () => {
     expect(await audioOnly(mime, bytes.length, async (at, n) => bytes.subarray(at, at + n))).toBe(
       true,
     );
+  });
+  it('reproduces a M4A file named MP3 and preserves its bytes while correcting MIME', async () => {
+    const bytes = await readFile('tests/fixtures/audio/silence.m4a');
+    expect(
+      await audioOnly('audio/mpeg', bytes.length, async (at, n) => bytes.subarray(at, at + n)),
+    ).toBe(false);
+    const original = new File([bytes], 'WhatsApp Audio.mp3', { type: 'audio/mpeg' });
+    const prepared = await prepareUploadFile(original, 'audiodescricao');
+    expect(prepared.type).toBe('audio/mp4');
+    expect(Buffer.from(await prepared.arrayBuffer())).toEqual(bytes);
+    expect(
+      await audioOnly(prepared.type, bytes.length, async (at, n) => bytes.subarray(at, at + n)),
+    ).toBe(true);
+  });
+  it.each([
+    ['silence.m4a', true],
+    ['video.mp4', false],
+  ])('inspects MP4 selected with video MIME: %s', async (name, accepted) => {
+    const bytes = await readFile('tests/fixtures/audio/' + name);
+    const prepared = await prepareUploadFile(
+      new File([bytes], 'audio.mp4', { type: 'video/mp4' }),
+      'audiodescricao',
+    );
+    expect(prepared.type).toBe('audio/mp4');
+    expect(
+      await audioOnly(prepared.type, bytes.length, async (at, n) => bytes.subarray(at, at + n)),
+    ).toBe(accepted);
   });
   it.each([
     ['mp4', 'audio/mp4'],

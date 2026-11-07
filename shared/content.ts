@@ -78,7 +78,8 @@ export const AUDIO_TYPES = [
   'audio/x-ms-wma',
   'audio/flac',
 ] as const;
-export const AUDIO_ACCEPT = AUDIO_TYPES.join(',') + ',.mp3,.m4a,.ogg,.opus,.aac,.wav,.wma,.flac';
+export const AUDIO_ACCEPT =
+  AUDIO_TYPES.join(',') + ',.mp3,.m4a,.mp4,.ogg,.opus,.aac,.wav,.wma,.flac';
 
 export function normalizedMime(mime: string, name: string): string {
   const aliases: Record<string, string> = {

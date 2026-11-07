@@ -1,5 +1,14 @@
 # Aceite V4 — evidências locais de 04/11/2026
 
+## Atualização: áudio com extensão incorreta e MP4 somente com áudio — 06/11/2026
+
+- Investigado arquivo fornecido em `testes/`, com nome `.mp3`. `file`/`ffprobe` identificaram contêiner M4A/MP4, codec AAC, somente áudio (mono, 24 kHz). Verificador real do Worker reproduziu rejeição com MIME `audio/mpeg` e aceitação com `audio/mp4`: nome/extensão não correspondiam ao formato real.
+- Navegador agora identifica o candidato de MIME por cabeçalho antes de solicitar upload, para áudio: MP4/M4A, WAV, FLAC, Ogg, ASF/WMA, MP3/AAC. A gravação não é convertida nem reencodificada. A validação completa dos streams continua no Worker; cabeçalho no cliente não é prova de ausência de vídeo. Seletor inclui `.mp4`, somente com trilha de áudio. MP4 com vídeo permanece recusado.
+- Arquivo real passou pela preparação do cliente e por `audioOnly` do Worker, em teste local: MIME corrigido para `audio/mp4`, bytes idênticos e aceitação. Não houve upload/publicação da gravação real nem inclusão dela no commit. Regressão usa silêncio sintético M4A com nomes `.mp3`/`.mp4`, sem incorporar gravação particular.
+- Corrigida mensagem de falha quando zero arquivos foram recebidos: informa que nada foi adicionado, sem orientar a salvar recursos inexistentes. O simulador passa a verificar áudios com a mesma função de inspeção do Worker.
+- Tipos, lint, build com base `/ciencia-sem-barreiras/`, **63 testes unitários e 15 cenários Playwright passaram**. Browser confere MIME `audio/mp4` na autorização, envio/publicação dos dois nomes e nove players de áudio, além de rejeição de vídeo, PDFs, capas, responsividade e acessibilidade existentes. Sem teste autenticado no Supabase hospedado nesta execução. A API atual já suporta `audio/mp4`; esta correção não requer migração nem atualização do Worker.
+- Acompanhado movimento das sete capas de `imagens/` para `testes/`: build usa lista explícita dos nomes oficiais e mantém saída/URLs `imagens/`. Conferido artefato com somente sete JPEGs; gravação, PDF e fotos adicionais de teste não são copiados. Histórico/documentação de origem preservados.
+
 ## Atualização: Baixar PDF ao lado de Fechar — 06/11/2026
 
 - Botão compacto “Baixar PDF” no mesmo cabeçalho de Fechar, sem rodapé nem retorno da barra de impressão/opções. Ambos têm alvo de toque mínimo 44px. Download usa os bytes originais do documento aberto pelo PDF.js e blob local; não navega nem cria nova aba. Controle aguarda o documento carregar, bloqueia cliques duplicados e informa falha sem substituir a leitura.

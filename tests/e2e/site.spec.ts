@@ -410,6 +410,7 @@ test('Audiodescrição accepts audio, rejects video and removes WebVTT controls'
     .filter({ has: page.locator('#upload-audiodescricao') });
   const input = panel.getByLabel('Anexar Audiodescrição (máximo 50 MB)');
   expect(await input.getAttribute('accept')).not.toContain('video/');
+  expect(await input.getAttribute('accept')).toContain('.mp4');
   await expect(
     panel.getByRole('button', { name: 'Adicionar vídeo por endereço HTTPS' }),
   ).toHaveCount(0);
@@ -418,7 +419,8 @@ test('Audiodescrição accepts audio, rejects video and removes WebVTT controls'
     mimeType: 'video/mp4',
     buffer: await readFile('tests/fixtures/audio/video.mp4'),
   });
-  await expect(page.getByRole('status')).toContainText('formato permitido');
+  await expect(page.getByRole('status')).toContainText('0 de 1 arquivos recebidos');
+  await expect(page.getByRole('status')).toContainText('Nenhum arquivo foi adicionado');
   await expect(panel.locator('.media-editor')).toHaveCount(0);
   for (const [ext, mime] of [
     ['mp3', 'audio/mpeg'],
@@ -442,6 +444,27 @@ test('Audiodescrição accepts audio, rejects video and removes WebVTT controls'
     await expect(resource.getByLabel('Pôster do vídeo')).toHaveCount(0);
     await expect(resource.getByLabel('Legenda WebVTT')).toHaveCount(0);
   }
+  for (const [name, mime] of [
+    ['audio-renomeado.mp3', 'audio/mpeg'],
+    ['audio.mp4', 'video/mp4'],
+  ]) {
+    const observed = page.waitForRequest(
+      (request) =>
+        request.url().endsWith('/admin/uploads/authorize') && request.method() === 'POST',
+    );
+    await input.setInputFiles({
+      name,
+      mimeType: mime,
+      buffer: await readFile('tests/fixtures/audio/silence.m4a'),
+    });
+    const authorization = await observed;
+    expect(authorization.postDataJSON().mime).toBe('audio/mp4');
+    await expect(page.getByRole('status')).toContainText('Arquivo recebido');
+    const resource = panel.locator('.media-editor').last();
+    await resource.getByLabel('Descrição do recurso').fill(name);
+    await resource.getByLabel('Crédito e licença').fill('Silêncio sintético para QA');
+    await resource.getByLabel('Transcrição').fill('Silêncio gerado apenas para teste.');
+  }
   await page.getByRole('button', { name: 'Salvar rascunho', exact: true }).click();
   await expect(page.getByRole('status')).toContainText('Rascunho salvo');
   const visitor = await page.context().newPage();
@@ -452,9 +475,9 @@ test('Audiodescrição accepts audio, rejects video and removes WebVTT controls'
   await visitor.reload();
   await expect(visitor.locator('#audiodescricao')).toBeFocused();
   await expect(visitor.locator('#audiodescricao video')).toHaveCount(0);
-  await expect(visitor.locator('#audiodescricao audio')).toHaveCount(7);
+  await expect(visitor.locator('#audiodescricao audio')).toHaveCount(9);
   await expect(visitor.locator('#audiodescricao audio[autoplay]')).toHaveCount(0);
-  await expect(visitor.locator('#audiodescricao audio[controls]')).toHaveCount(7);
+  await expect(visitor.locator('#audiodescricao audio[controls]')).toHaveCount(9);
   const wav = visitor.getByRole('link', { name: 'Abrir ou baixar áudio: Áudio de teste wav' });
   const wavUrl = await wav.getAttribute('href');
   const response = await visitor.request.get(wavUrl!);

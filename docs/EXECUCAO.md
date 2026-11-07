@@ -124,7 +124,7 @@ A publicação mantém staging privado e URLs temporárias, promovendo PDFs junt
 
 Com 0001–0004 já aplicadas, executar apenas `0005_audio_description.sql` e publicar o Worker antes do frontend. A migração permite AAC, WAV, WMA e FLAC nos buckets e adiciona o tipo interno `audiodescricao_audio`, mantendo os registros antigos. Pode ser repetida.
 
-Audiodescrição aceita MP3, AAC (ADTS/ADIF), WAV, WMA, M4A, OGG/Opus e FLAC, até 50 MB. Não aceita upload de vídeo nem endereço externo. A transcrição continua obrigatória ao publicar. Há player sem autoplay e link para abrir/baixar; formatos sem suporte nativo no navegador podem ser ouvidos em aplicativo externo. Preferir MP3 para distribuição. Não há transcodificação automática.
+Audiodescrição aceita MP3, AAC (ADTS/ADIF), WAV, WMA, M4A/MP4 somente com áudio, OGG/Opus e FLAC, até 50 MB. Não aceita upload de vídeo nem endereço externo. A transcrição continua obrigatória ao publicar. Há player sem autoplay e link para abrir/baixar; formatos sem suporte nativo no navegador podem ser ouvidos em aplicativo externo. Preferir MP3 para distribuição. Não há transcodificação automática.
 
 O Worker valida MIME e assinatura; em M4A inspeciona as trilhas do `moov` (somente `soun`) com leituras Range que pulam o conteúdo de mídia; em WMA verifica os objetos de streams ASF, rejeitando vídeo. Metadados MP4/ASF limitados a 2 MiB; MP4 aceita até 64 caixas de topo. Ogg verifica identificação dos streams iniciais (até 64 KiB). Essas verificações são de formato/metadados, não decodificação completa de áudio. Os testes usam arquivos reais de silêncio sintético e vídeos de quadro preto, restritos a `tests/fixtures/audio/`.
 
@@ -139,3 +139,9 @@ Referências: [áudio em navegadores (MDN)](https://developer.mozilla.org/en-US/
 PDF.js 6.5.438 e seus estilos são carregados sob demanda, somente ao abrir um PDF de Texto. Worker, renderer, fontes, CMaps e WASM são copiados para `pdfjs/` no build; seus URLs respeitam o baseHref do Pages. Não dependem de CDN. O leitor usa páginas visíveis e fila de renderização, ajuste à largura e camada de texto; XFA, formulários/anotações interativas, scripts e auto-links não são habilitados. Acessibilidade da leitura continua dependendo da estrutura e texto disponíveis no PDF original.
 
 No celular, popup em tela inteira; em desktop, até 1280px e 96dvh. Cabeçalho com título em uma linha e botões compactos Baixar PDF e Fechar lado a lado (toque mínimo 44px). O download usa os bytes originais do documento aberto, sem nova aba e sem sair da leitura. A mensagem de fallback, a impressão e o menu de opções foram retirados da interface. Erros de carregamento oferecem Tentar novamente. A ausência desses botões não restringe acesso ao arquivo público nem impede recursos do navegador fora da interface.
+
+### Gravações de WhatsApp com extensão diferente do conteúdo
+
+Um arquivo pode ter nome `.mp3` e conter M4A/MP4 com AAC. O navegador agora lê um pequeno cabeçalho, prepara o tipo correto antes da autorização e envia os mesmos bytes. Isso evita que o Storage e o Worker recebam `audio/mpeg` para um contêiner MP4. O servidor mantém a inspeção de trilhas: vídeos não são aceitos na Audiodescrição, mesmo renomeados como áudio. Não é necessária conversão para esse caso. A seleção de `.mp4` foi habilitada para arquivos sem vídeo.
+
+As sete capas oficiais estão em `testes/`; somente os nomes explicitamente listados em `angular.json` são copiados para `imagens/` no build. A pasta também tem arquivos locais de diagnóstico, que não devem ser incluídos/publicados automaticamente.
