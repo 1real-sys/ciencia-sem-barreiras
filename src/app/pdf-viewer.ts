@@ -55,7 +55,16 @@ function loadViewerStyles(url: string): Promise<void> {
         <h2>{{ media().alt || 'Documento PDF' }}</h2>
         <button
           type="button"
-          class="pdf-close"
+          class="pdf-control secondary"
+          aria-label="Baixar PDF"
+          [disabled]="loading() || !ready() || downloading()"
+          (click)="download()"
+        >
+          {{ downloading() ? 'Baixando…' : 'Baixar PDF' }}
+        </button>
+        <button
+          type="button"
+          class="pdf-control"
           autofocus
           aria-label="Fechar PDF"
           (click)="dialog.close()"
@@ -63,6 +72,9 @@ function loadViewerStyles(url: string): Promise<void> {
           Fechar <span aria-hidden="true">×</span>
         </button>
       </div>
+      @if (downloadError()) {
+        <p class="pdf-download-status" role="alert">{{ downloadError() }}</p>
+      }
       <div class="pdf-stage">
         <div
           #reader
@@ -91,6 +103,9 @@ export class PdfViewer implements OnDestroy {
   @ViewChild('dialog', { static: true }) dialog!: ElementRef<HTMLDialogElement>;
   @ViewChild('reader', { static: true }) reader!: ElementRef<HTMLDivElement>;
   loading = signal(false);
+  ready = signal(false);
+  downloading = signal(false);
+  downloadError = signal('');
   error = signal('');
   historyPending = signal(false);
   private readonly historyId = crypto.randomUUID();
@@ -206,12 +221,40 @@ export class PdfViewer implements OnDestroy {
       const pdfDocument = await this.task.promise;
       if (generation !== this.generation || !this.dialog.nativeElement.open) return;
       this.viewer.setDocument(pdfDocument);
+      this.ready.set(true);
       this.resize?.observe(this.reader.nativeElement);
     } catch {
       if (generation === this.generation) {
         this.loading.set(false);
         this.error.set('Não foi possível carregar o texto. Tente novamente.');
       }
+    }
+  }
+  async download() {
+    const pdfDocument = this.viewer?.pdfDocument;
+    if (!pdfDocument || this.downloading()) return;
+    this.downloading.set(true);
+    this.downloadError.set('');
+    try {
+      const bytes = await pdfDocument.getData();
+      if (!this.dialog.nativeElement.open || pdfDocument !== this.viewer?.pdfDocument) return;
+      const url = URL.createObjectURL(
+        new Blob([new Uint8Array(bytes).buffer], { type: 'application/pdf' }),
+      );
+      const link = document.createElement('a');
+      link.href = url;
+      link.download =
+        (this.media().alt || 'documento')
+          .replace(/[^\p{L}\p{N} ._-]/gu, '')
+          .replace(/\.pdf$/i, '')
+          .slice(0, 120) + '.pdf';
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch {
+      if (this.dialog.nativeElement.open && pdfDocument === this.viewer?.pdfDocument)
+        this.downloadError.set('Não foi possível baixar o PDF. Tente novamente.');
+    } finally {
+      this.downloading.set(false);
     }
   }
   private release() {
@@ -221,6 +264,8 @@ export class PdfViewer implements OnDestroy {
     void this.task?.destroy().catch(() => undefined);
     this.task = undefined;
     this.loading.set(false);
+    this.ready.set(false);
+    this.downloadError.set('');
   }
   ngOnDestroy() {
     this.release();

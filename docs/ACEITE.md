@@ -1,5 +1,10 @@
 # Aceite V4 — evidências locais de 04/11/2026
 
+## Atualização: Baixar PDF ao lado de Fechar — 06/11/2026
+
+- Botão compacto “Baixar PDF” no mesmo cabeçalho de Fechar, sem rodapé nem retorno da barra de impressão/opções. Ambos têm alvo de toque mínimo 44px. Download usa os bytes originais do documento aberto pelo PDF.js e blob local; não navega nem cria nova aba. Controle aguarda o documento carregar, bloqueia cliques duplicados e informa falha sem substituir a leitura.
+- Tipos, lint, build com base `/ciencia-sem-barreiras/` e **15 cenários Playwright passaram**. Download comparado byte a byte ao arquivo enviado; popup permanece aberto, Voltar/Esc e foco preservados. Botões na mesma linha em 320/390/1440px, alvos de toque e ausência de overflow conferidos. Captura de 320px revisada visualmente. Testes locais com simulador/Chromium, sem aparelho físico.
+
 ## Atualização: leitor de PDF com foco no texto — 06/11/2026
 
 - Leitor nativo em iframe substituído por PDF.js 6.5.438: página ajustada à largura, canvas e camada de texto selecionável, sem barra do navegador, miniaturas, download, impressão ou menu de três pontos. Retirados a mensagem “Se o leitor...” e o rodapé de download. Único controle de leitura é Fechar, compacto e com alvo de toque mínimo de 44px. Celular usa tela inteira; desktop, até 1280px e 96dvh. Esc, Voltar e retorno do foco preservados.

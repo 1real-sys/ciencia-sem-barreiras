@@ -302,9 +302,14 @@ test('PDFs in Texto and Atividades and multiple photos stay private until public
   await expect(modal.locator('.pdf-reader canvas').first()).toBeVisible();
   await expect(modal.locator('.textLayer')).toContainText('Documento de teste para QA');
   await expect(modal.locator('iframe')).toHaveCount(0);
-  await expect(modal.getByRole('button')).toHaveCount(1);
+  await expect(modal.getByRole('button')).toHaveCount(2);
   await expect(modal.getByText('Se o leitor', { exact: false })).toHaveCount(0);
-  await expect(modal.getByRole('button', { name: /baixar|imprimir|opções/i })).toHaveCount(0);
+  await expect(modal.getByRole('button', { name: /imprimir|opções/i })).toHaveCount(0);
+  const downloadPending = visitor.waitForEvent('download');
+  await modal.getByRole('button', { name: 'Baixar PDF', exact: true }).click();
+  const download = await downloadPending;
+  expect(await readFile((await download.path())!)).toEqual(pdf);
+  await expect(modal).toBeVisible();
   for (const width of [320, 390, 1440]) {
     await visitor.setViewportSize({ width, height: 900 });
     await expect
@@ -313,6 +318,15 @@ test('PDFs in Texto and Atividades and multiple photos stay private until public
       )
       .toBeGreaterThan(width * 0.8);
     const bounds = await modal.boundingBox();
+    const downloadButton = await modal
+      .getByRole('button', { name: 'Baixar PDF', exact: true })
+      .boundingBox();
+    const closeButton = await modal
+      .getByRole('button', { name: 'Fechar PDF', exact: true })
+      .boundingBox();
+    expect(Math.abs(downloadButton!.y - closeButton!.y)).toBeLessThan(2);
+    expect(downloadButton!.height).toBeGreaterThanOrEqual(44);
+    expect(closeButton!.height).toBeGreaterThanOrEqual(44);
     expect(bounds!.x).toBeGreaterThanOrEqual(0);
     expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(width);
     expect(await visitor.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(

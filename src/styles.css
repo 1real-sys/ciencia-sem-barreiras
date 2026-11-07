@@ -320,13 +320,18 @@ body:has(.pdf-dialog[open]) {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.pdf-close {
+.pdf-control {
   min-height: 44px;
   padding: 4px 10px;
   font-size: 0.85rem;
   border-radius: 8px;
   gap: 6px;
   flex: none;
+}
+.pdf-download-status {
+  margin: 0;
+  padding: 4px 8px;
+  font-size: 0.85rem;
 }
 .pdf-stage {
   position: relative;
