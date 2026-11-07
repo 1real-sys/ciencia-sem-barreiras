@@ -72,7 +72,7 @@ test('built Pages artifact serves assets and reopens hash routes under configure
     const cards = page.locator('.space-card');
     await expect(cards).toHaveCount(9);
     const files = [
-      'aquario-nascente-rio.svg',
+      'imagens/aquarioPaludario.jpeg',
       'aquario-fundo-rio.svg',
       'imagens/AquarioLagoa.jpeg',
       'imagens/AquarioMarinho.jpeg',
@@ -90,7 +90,9 @@ test('built Pages artifact serves assets and reopens hash routes under configure
       await expect
         .poll(() => cover.evaluate((img: HTMLImageElement) => img.naturalWidth))
         .toBeGreaterThan(0);
-      await expect(card.locator('.art-label')).toHaveText(index < 2 ? 'Ilustração' : 'Fotografia');
+      await expect(card.locator('.art-label')).toHaveText(
+        index === 1 ? 'Ilustração' : 'Fotografia',
+      );
       expect(await cover.evaluate((img) => getComputedStyle(img).filter)).toBe('none');
     }
   }

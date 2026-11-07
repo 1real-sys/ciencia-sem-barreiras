@@ -144,4 +144,4 @@ No celular, popup em tela inteira; em desktop, até 1280px e 96dvh. Cabeçalho c
 
 Um arquivo pode ter nome `.mp3` e conter M4A/MP4 com AAC. O navegador agora lê um pequeno cabeçalho, prepara o tipo correto antes da autorização e envia os mesmos bytes. Isso evita que o Storage e o Worker recebam `audio/mpeg` para um contêiner MP4. O servidor mantém a inspeção de trilhas: vídeos não são aceitos na Audiodescrição, mesmo renomeados como áudio. Não é necessária conversão para esse caso. A seleção de `.mp4` foi habilitada para arquivos sem vídeo.
 
-As sete capas oficiais estão em `testes/`; somente os nomes explicitamente listados em `angular.json` são copiados para `imagens/` no build. A pasta também tem arquivos locais de diagnóstico, que não devem ser incluídos/publicados automaticamente.
+As oito capas oficiais estão em `testes/`; somente os nomes explicitamente listados em `angular.json` são copiados para `imagens/` no build. A pasta também tem arquivos locais de diagnóstico, que não devem ser incluídos/publicados automaticamente.

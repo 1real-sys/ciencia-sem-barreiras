@@ -100,7 +100,7 @@ test('editor draft isolation, upload, publish, refresh, remove section, restore,
   await expect(page.locator('.space-card')).toHaveCount(9);
   await expect(
     page.locator('.space-card .art-label').filter({ hasText: 'Fotografia' }),
-  ).toHaveCount(7);
+  ).toHaveCount(8);
   await expect(page.locator('.space-card img[src="imagens/MataAtlantica1.jpeg"]')).toHaveCount(1);
   await expect(page.locator('.space-card img[src="imagens/MataAtlantica2.jpeg"]')).toHaveCount(1);
   await expect(

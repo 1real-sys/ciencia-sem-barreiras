@@ -1,5 +1,10 @@
 # Aceite V4 — evidências locais de 04/11/2026
 
+## Atualização: capa do Paludário — 06/11/2026
+
+- Fotografia `testes/aquarioPaludario.jpeg` fornecida pelo responsável associada a Aquário Nascente do Rio – Paludário, mantendo o slug `aquario-nascente-rio`. Substitui a ilustração nos cartões da home, listagem e painel; rótulo Fotografia, original preservado. Build inclui o arquivo na lista explícita e o serve em `imagens/aquarioPaludario.jpeg`. Oito capas fotográficas; Fundo do Rio mantém ilustração.
+- Tipos, lint, build com base `/ciencia-sem-barreiras/` e **15 cenários Playwright aprovados**. Teste do artefato verifica carregamento real da nova foto/URL e rótulos; dashboard com oito fotografias. Verificações existentes de mobile, acessibilidade e fluxos editoriais também passaram. Deploy Pages depende da execução automática após o push.
+
 ## Atualização: áudio com extensão incorreta e MP4 somente com áudio — 06/11/2026
 
 - Investigado arquivo fornecido em `testes/`, com nome `.mp3`. `file`/`ffprobe` identificaram contêiner M4A/MP4, codec AAC, somente áudio (mono, 24 kHz). Verificador real do Worker reproduziu rejeição com MIME `audio/mpeg` e aceitação com `audio/mp4`: nome/extensão não correspondiam ao formato real.

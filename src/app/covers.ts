@@ -3,6 +3,7 @@ import { SPACES } from '../../shared/content';
 type SpaceSlug = (typeof SPACES)[number][0];
 
 const PHOTOS: Partial<Record<SpaceSlug, string>> = {
+  'aquario-nascente-rio': 'aquarioPaludario',
   'aquario-lagoa': 'AquarioLagoa',
   'aquario-marinho': 'AquarioMarinho',
   'aquario-praia': 'AquarioPraia',
