@@ -1,5 +1,10 @@
 # Aceite V4 — evidências locais de 04/11/2026
 
+## Atualização: logo no destaque da home — 07/11/2026
+
+- A imagem principal da home usa `imagens/logoprojeto.jpeg`, também presente no cabeçalho. Removida a legenda da antiga ilustração. Enquadramento recorta as margens vazias; mistura com o fundo e ajuste de contraste integram o branco do JPEG ao site. Arquivo original e textos da home preservados.
+- Tipos, lint e build com base `/ciencia-sem-barreiras/` aprovados. **15 cenários Playwright passaram**; após o ajuste final de contraste, passaram novamente os três cenários responsivos de 320/390/1440px, incluindo os escopos axe existentes. Capturas do destaque nesses tamanhos em `test-results/home-logo-hero-{320,390,1440}.png`; revisão visual em Chromium, sem aparelho físico. Publicação Pages será acionada pelo push.
+
 ## Atualização: transcrição retirada de Audiodescrição — 07/11/2026
 
 - Retirados o campo de transcrição do editor de Audiodescrição, sua exigência na publicação e o bloco público correspondente. Registros e históricos antigos são preservados, sem alteração de schema; valores antigos não são renderizados nessa seção. A transcrição opcional de Libras permanece disponível.

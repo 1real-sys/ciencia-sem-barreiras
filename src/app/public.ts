@@ -23,10 +23,11 @@ import { spaceCover } from './covers';
         </div>
         <figure class="hero-art">
           <img
-            src="landscape.svg"
-            alt="Ilustração de água doce, manguezal, mar, floresta e restinga conectados pela paisagem"
+            src="imagens/logoprojeto.jpeg"
+            alt="Logo com o nome Escola de Biologia e História"
+            width="1254"
+            height="1254"
           />
-          <figcaption>Ilustração original dos ambientes · não representa o acervo</figcaption>
         </figure>
       </div>
       <div class="intro-strip">

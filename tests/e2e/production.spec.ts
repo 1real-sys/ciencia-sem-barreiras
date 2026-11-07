@@ -72,6 +72,8 @@ test('built Pages artifact serves assets and reopens hash routes under configure
     .toBeGreaterThan(0);
   const image = page.locator('.hero-art img');
   await expect(image).toBeVisible();
+  await expect(image).toHaveAttribute('src', 'imagens/logoprojeto.jpeg');
+  await expect(page.locator('.hero-art figcaption')).toHaveCount(0);
   expect(await image.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
   for (const route of ['#/', '#/ambientes']) {
     await page.goto('http://localhost:4174' + base + route);

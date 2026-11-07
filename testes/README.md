@@ -21,6 +21,8 @@ O build copia somente os oito JPEGs oficiais da tabela para `imagens/` no artefa
 
 Áudios, PDFs e demais fotos de teste nesta pasta não são incluídos automaticamente no site.
 
-## Marca do cabeçalho
+## Marca do cabeçalho e da home
 
 `logoprojeto.jpeg` foi fornecido pelo responsável para substituir o símbolo junto ao nome Ciência Sem Barreiras no cabeçalho, em 07/11/2026. Arquivo original preservado e copiado explicitamente para `imagens/logoprojeto.jpeg`. É complementar ao nome acessível do link de início (`alt=""`). Autoria/licença não informadas; não foi inventada atribuição nem autorização institucional.
+
+A mesma imagem aparece no destaque da home, com texto alternativo correspondente ao nome escrito no logo. O branco acompanha o fundo claro do site por CSS; o JPEG original permanece intacto.

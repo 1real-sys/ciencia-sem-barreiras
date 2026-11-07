@@ -148,10 +148,14 @@ main:focus {
   margin: 0;
 }
 .hero-art img {
+  display: block;
   width: 100%;
-  border-radius: 32px;
+  height: auto;
+  border-radius: 0;
   aspect-ratio: 1000 / 640;
-  object-fit: contain;
+  object-fit: cover;
+  filter: contrast(1.1);
+  mix-blend-mode: multiply;
 }
 figcaption {
   font-size: 0.75rem;
@@ -545,7 +549,6 @@ summary {
   }
   .hero-art img {
     aspect-ratio: 1.5;
-    border-radius: 26px;
   }
   .hero {
     gap: 24px;
