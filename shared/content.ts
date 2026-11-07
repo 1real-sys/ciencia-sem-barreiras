@@ -27,6 +27,7 @@ export const MEDIA_KINDS = [
 export interface Media {
   id: string;
   kind: (typeof MEDIA_KINDS)[number];
+  mime?: string;
   url: string;
   path: string;
   alt: string;
@@ -58,19 +59,71 @@ export const MIME: Record<string, string> = {
   'audio/mpeg': 'mp3',
   'audio/mp4': 'm4a',
   'audio/ogg': 'ogg',
+  'audio/aac': 'aac',
+  'audio/wav': 'wav',
+  'audio/x-ms-wma': 'wma',
+  'audio/flac': 'flac',
   'video/mp4': 'mp4',
   'video/webm': 'webm',
   'text/vtt': 'vtt',
   'application/pdf': 'pdf',
 };
 
+export const AUDIO_TYPES = [
+  'audio/mpeg',
+  'audio/mp4',
+  'audio/ogg',
+  'audio/aac',
+  'audio/wav',
+  'audio/x-ms-wma',
+  'audio/flac',
+] as const;
+export const AUDIO_ACCEPT = AUDIO_TYPES.join(',') + ',.mp3,.m4a,.ogg,.opus,.aac,.wav,.wma,.flac';
+
+export function normalizedMime(mime: string, name: string): string {
+  const aliases: Record<string, string> = {
+    'audio/mp3': 'audio/mpeg',
+    'audio/x-mp3': 'audio/mpeg',
+    'audio/x-m4a': 'audio/mp4',
+    'audio/x-aac': 'audio/aac',
+    'audio/vnd.dlna.adts': 'audio/aac',
+    'audio/x-wav': 'audio/wav',
+    'audio/wave': 'audio/wav',
+    'audio/vnd.wave': 'audio/wav',
+    'audio/wma': 'audio/x-ms-wma',
+    'audio/x-flac': 'audio/flac',
+    'audio/opus': 'audio/ogg',
+  };
+  const type = mime.toLowerCase();
+  if (aliases[type]) return aliases[type];
+  if (type && type !== 'application/octet-stream') return type;
+  const ext = name.toLowerCase().split('.').pop();
+  return (
+    Object.entries(MIME).find(
+      ([type, extension]) =>
+        type.startsWith('audio/') && (extension === ext || (ext === 'opus' && extension === 'ogg')),
+    )?.[0] || type
+  );
+}
+
+export function isAudioMedia(media: Media): boolean {
+  const ext = media.url.split(/[?#]/)[0].split('.').pop()?.toLowerCase();
+  const mime =
+    media.mime ||
+    Object.entries(MIME).find(
+      ([type, extension]) => type.startsWith('audio/') && extension === ext,
+    )?.[0] ||
+    '';
+  return AUDIO_TYPES.includes(mime as (typeof AUDIO_TYPES)[number]);
+}
+
 export function allowedMediaType(kind: string, mime: string): boolean {
   const types: Record<Media['kind'], readonly string[]> = {
     image: ['image/jpeg', 'image/png', 'image/webp'],
-    audio: ['audio/mpeg', 'audio/mp4', 'audio/ogg'],
+    audio: AUDIO_TYPES,
     libras: ['video/mp4', 'video/webm'],
-    audiodescricao: ['video/mp4', 'video/webm'],
-    caption: ['text/vtt'],
+    audiodescricao: AUDIO_TYPES,
+    caption: [],
     text_pdf: ['application/pdf'],
     activity_pdf: ['application/pdf'],
   };

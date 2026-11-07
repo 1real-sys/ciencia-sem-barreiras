@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import worker, { Guard, signature, Env } from '../../worker/src/index';
 import { emptyContent, SPACES } from '../../shared/content';
@@ -140,7 +141,7 @@ describe('Worker security boundary', () => {
   );
   it.each(
     [false, true].flatMap((error) =>
-      ['image', 'text_pdf', 'activity_pdf'].map((kind) => ({ error, kind })),
+      ['image', 'text_pdf', 'activity_pdf', 'audiodescricao'].map((kind) => ({ error, kind })),
     ),
   )(
     'handles minimal mutation responses during $kind upload (error: $error)',
@@ -152,11 +153,18 @@ describe('Worker security boundary', () => {
       );
       const { token } = await login.json();
       const id = 'ed2f07ae-e9c6-4c71-923c-26422c5ac099';
-      const mime = kind === 'image' ? 'image/png' : 'application/pdf';
+      const mime =
+        kind === 'image'
+          ? 'image/png'
+          : kind === 'audiodescricao'
+            ? 'audio/wav'
+            : 'application/pdf';
       const bytes =
         kind === 'image'
           ? new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10])
-          : new TextEncoder().encode('%PDF-1.7\n');
+          : kind === 'audiodescricao'
+            ? await readFile('tests/fixtures/audio/silence.wav')
+            : new TextEncoder().encode('%PDF-1.7\n');
       const result = { data: null, error: mutationError ? { message: 'write denied' } : null };
       const insert = vi.fn(async () => result);
       const update = vi.fn(() => ({ eq: async () => result }));
@@ -236,6 +244,83 @@ describe('Worker security boundary', () => {
       }
     },
   );
+  it.each(
+    [
+      ['m4a', 'audio/mp4', 'mp4'],
+      ['wma', 'audio/x-ms-wma', 'wmv'],
+    ].flatMap(([ext, mime, video]) =>
+      [false, true].map((forged) => ({ ext, mime, video, forged })),
+    ),
+  )(
+    'checks ranged $ext audio metadata during confirmation (video: $forged)',
+    async ({ ext, mime, video, forged }) => {
+      const { env } = fixture();
+      const login = await worker.fetch(
+        req('/admin/session', 'POST', { password: env.ADMIN_PASSWORD }),
+        env,
+      );
+      const { token } = await login.json();
+      const bytes = await readFile(
+        `tests/fixtures/audio/${forged ? 'video.' + video : 'silence.' + ext}`,
+      );
+      const id = 'ed2f07ae-e9c6-4c71-923c-26422c5ac099';
+      const update = vi.fn(() => ({ eq: async () => ({ data: null, error: null }) }));
+      fakeDb.from.mockReturnValue({
+        select: () => ({
+          eq: () => ({
+            single: async () => ({
+              data: {
+                id,
+                object_path: 'audio.' + ext,
+                metadata: {
+                  kind: 'audiodescricao',
+                  mime,
+                  size: bytes.length,
+                  expires: Date.now() + 60000,
+                },
+              },
+              error: null,
+            }),
+          }),
+        }),
+        update,
+      });
+      const remove = vi.fn(async () => ({ data: [], error: null }));
+      fakeDb.storage.from.mockReturnValue({
+        createSignedUrl: async () => ({
+          data: { signedUrl: 'https://storage.example/audio' },
+          error: null,
+        }),
+        remove,
+      });
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async (_url, init) => {
+          if (init.method === 'HEAD')
+            return new Response(null, {
+              headers: { 'Content-Type': mime, 'Content-Length': String(bytes.length) },
+            });
+          const [start, end] = init.headers.Range.match(/\d+/g).map(Number);
+          const last = Math.min(end, bytes.length - 1);
+          return new Response(bytes.subarray(start, last + 1), {
+            status: 206,
+            headers: { 'Content-Range': `bytes ${start}-${last}/${bytes.length}` },
+          });
+        }),
+      );
+      try {
+        const response = await worker.fetch(
+          req('/admin/uploads/complete', 'POST', { id }, token),
+          env,
+        );
+        expect(response.status).toBe(forged ? 422 : 200);
+        expect(update).toHaveBeenCalledTimes(forged ? 0 : 1);
+        expect(remove).toHaveBeenCalledTimes(forged ? 1 : 0);
+      } finally {
+        vi.unstubAllGlobals();
+      }
+    },
+  );
   it('denies unauthenticated private reads and publication', async () => {
     const { env } = fixture();
     for (const [p, m] of [
@@ -305,6 +390,9 @@ describe('Worker security boundary', () => {
       { kind: 'activity_pdf', mime: 'text/html', size: 10 },
       { kind: 'activity_pdf', mime: 'application/pdf', size: 52428801 },
       { kind: 'image', mime: 'application/pdf', size: 10 },
+      { kind: 'audiodescricao', mime: 'video/mp4', size: 10 },
+      { kind: 'audiodescricao', mime: 'video/webm', size: 10 },
+      { kind: 'caption', mime: 'text/vtt', size: 10 },
     ])
       expect(
         (
@@ -424,6 +512,7 @@ describe('Worker security boundary', () => {
       'ed2f07ae-e9c6-4c71-923c-26422c5ac097',
       'ed2f07ae-e9c6-4c71-923c-26422c5ac096',
       'ed2f07ae-e9c6-4c71-923c-26422c5ac095',
+      'ed2f07ae-e9c6-4c71-923c-26422c5ac094',
     ];
     const content = contentSchema.parse({
       ...emptyContent(),
@@ -455,6 +544,17 @@ describe('Worker security boundary', () => {
           alt: 'Atividade',
           credit: 'QA',
         },
+        {
+          id: ids[5],
+          kind: 'audiodescricao',
+          mime: 'audio/wav',
+          path: 'space/audio.wav',
+          alt: 'Audiodescrição de teste',
+          credit: 'QA',
+          transcript: 'Texto de teste',
+          caption: ids[1],
+          poster: ids[0],
+        },
       ],
     });
     fakeDb.from.mockImplementation((table: string) => {
@@ -475,6 +575,7 @@ describe('Worker security boundary', () => {
                     metadata: {
                       validated: true,
                       kind: content.media.find((m) => m.id === filters['id'])?.kind,
+                      mime: content.media.find((m) => m.id === filters['id'])?.mime,
                     },
                   },
           error: null,
@@ -498,7 +599,7 @@ describe('Worker security boundary', () => {
         )
       ).status,
     ).toBe(200);
-    expect(copy).toHaveBeenCalledTimes(5);
+    expect(copy).toHaveBeenCalledTimes(6);
     expect(fakeDb.rpc).toHaveBeenCalledTimes(1);
     const args = fakeDb.rpc.mock.calls[0][1];
     expect(args.p_content.media[2].caption).toBe(
@@ -511,7 +612,34 @@ describe('Worker security boundary', () => {
     expect(args.p_content.media[4].url).toBe(
       'https://example.supabase.co/public/space/activity.pdf',
     );
+    expect(args.p_content.media[5].mime).toBe('audio/wav');
+    expect(args.p_content.media[5].caption).toBe('');
+    expect(args.p_content.media[5].poster).toBe('');
     expect(args.p_draft.media[2].caption).toBe(ids[1]);
+    fakeDb.rpc.mockClear();
+    content.media[5].mime = 'video/mp4';
+    const rejected = await worker.fetch(
+      req('/admin/spaces/aquario-marinho/publish', 'POST', { revision: 4 }, token),
+      env,
+    );
+    expect(rejected.status).toBe(422);
+    expect(fakeDb.rpc).not.toHaveBeenCalled();
+    content.media[5].enabled = false;
+    expect(
+      (
+        await worker.fetch(
+          req('/admin/spaces/aquario-marinho/publish', 'POST', { revision: 4 }, token),
+          env,
+        )
+      ).status,
+    ).toBe(200);
+    expect(
+      fakeDb.rpc.mock.calls[0][1].p_content.media.some(
+        (m: { kind: string }) => m.kind === 'audiodescricao',
+      ),
+    ).toBe(false);
+    content.media[5].mime = 'audio/wav';
+    content.media[5].enabled = true;
     fakeDb.rpc.mockClear();
     fakeDb.storage.from.mockReturnValue({
       copy: async () => ({ data: null, error: Error('failed') }),

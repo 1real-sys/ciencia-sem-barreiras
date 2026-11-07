@@ -294,3 +294,88 @@ test('PDFs in Texto and Atividades and multiple photos stay private until public
   expect((await new AxeBuilder({ page: visitor }).analyze()).violations).toEqual([]);
   await visitor.close();
 });
+
+test('Audiodescrição accepts audio, rejects video and removes WebVTT controls', async ({
+  page,
+}) => {
+  page.on('dialog', (dialog) => dialog.accept());
+  await page.goto('/#/admin');
+  await page.getByLabel('Senha de acesso').fill('local-testing-password-2026');
+  await page.getByRole('button', { name: 'Entrar', exact: true }).click();
+  await page
+    .locator('.space-card')
+    .filter({ hasText: 'Diorama da Restinga' })
+    .getByRole('button', { name: 'Editar' })
+    .click();
+  await expect(page.getByRole('heading', { name: 'Legendas WebVTT' })).toHaveCount(0);
+  await expect(page.locator('#upload-caption')).toHaveCount(0);
+  const panel = page
+    .locator('section.panel')
+    .filter({ has: page.locator('#upload-audiodescricao') });
+  const input = panel.getByLabel('Anexar Audiodescrição (máximo 50 MB)');
+  expect(await input.getAttribute('accept')).not.toContain('video/');
+  await expect(
+    panel.getByRole('button', { name: 'Adicionar vídeo por endereço HTTPS' }),
+  ).toHaveCount(0);
+  await input.setInputFiles({
+    name: 'video.mp4',
+    mimeType: 'video/mp4',
+    buffer: await readFile('tests/fixtures/audio/video.mp4'),
+  });
+  await expect(page.getByRole('status')).toContainText('formato permitido');
+  await expect(panel.locator('.media-editor')).toHaveCount(0);
+  for (const [ext, mime] of [
+    ['mp3', 'audio/mpeg'],
+    ['aac', 'audio/aac'],
+    ['wav', 'audio/x-wav'],
+    ['wma', 'application/octet-stream'],
+    ['m4a', 'audio/mp4'],
+    ['ogg', 'audio/ogg'],
+    ['flac', 'audio/flac'],
+  ]) {
+    await input.setInputFiles({
+      name: 'audio.' + ext,
+      mimeType: mime,
+      buffer: await readFile('tests/fixtures/audio/silence.' + ext),
+    });
+    await expect(page.getByRole('status')).toContainText('Arquivo recebido');
+    const resource = panel.locator('.media-editor').last();
+    await resource.getByLabel('Descrição do recurso').fill('Áudio de teste ' + ext);
+    await resource.getByLabel('Crédito e licença').fill('Silêncio sintético para QA');
+    await resource.getByLabel('Transcrição').fill('Silêncio gerado apenas para teste.');
+    await expect(resource.getByLabel('Pôster do vídeo')).toHaveCount(0);
+    await expect(resource.getByLabel('Legenda WebVTT')).toHaveCount(0);
+  }
+  await page.getByRole('button', { name: 'Salvar rascunho', exact: true }).click();
+  await expect(page.getByRole('status')).toContainText('Rascunho salvo');
+  const visitor = await page.context().newPage();
+  await visitor.goto('/#/ambientes/diorama-restinga?recurso=audiodescricao');
+  await expect(visitor.locator('#audiodescricao audio')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Publicar', exact: true }).click();
+  await expect(page.getByRole('status')).toContainText('Atualização publicada');
+  await visitor.reload();
+  await expect(visitor.locator('#audiodescricao')).toBeFocused();
+  await expect(visitor.locator('#audiodescricao video')).toHaveCount(0);
+  await expect(visitor.locator('#audiodescricao audio')).toHaveCount(7);
+  await expect(visitor.locator('#audiodescricao audio[autoplay]')).toHaveCount(0);
+  await expect(visitor.locator('#audiodescricao audio[controls]')).toHaveCount(7);
+  const wav = visitor.getByRole('link', { name: 'Abrir ou baixar áudio: Áudio de teste wav' });
+  const wavUrl = await wav.getAttribute('href');
+  const response = await visitor.request.get(wavUrl!);
+  expect(response.headers()['content-type']).toBe('audio/wav');
+  const player = visitor.locator('#audiodescricao audio').nth(2);
+  await expect
+    .poll(() => player.evaluate((audio: HTMLAudioElement) => audio.readyState))
+    .toBeGreaterThan(0);
+  expect(await player.evaluate((audio: HTMLAudioElement) => audio.paused)).toBe(true);
+  await visitor.getByText('Transcrição', { exact: true }).first().click();
+  await expect(visitor.getByText('Silêncio gerado apenas para teste.').first()).toBeVisible();
+  for (const width of [320, 390, 1440]) {
+    await visitor.setViewportSize({ width, height: 900 });
+    expect(await visitor.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
+  }
+  expect((await new AxeBuilder({ page: visitor }).analyze()).violations).toEqual([]);
+  await visitor.close();
+});

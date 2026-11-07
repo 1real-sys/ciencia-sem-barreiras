@@ -1,5 +1,15 @@
 # Aceite V4 — evidências locais de 04/11/2026
 
+## Atualização: Audiodescrição em áudio e retirada do WebVTT — 06/11/2026
+
+- Audiodescrição aceita apenas MP3, AAC, WAV, WMA, M4A, OGG/Opus e FLAC. Painel sem campo de vídeo/endereço externo/pôster nessa seção; público com player de áudio, transcrição e link para abrir/baixar. Sem autoplay. Formatos sem suporte no navegador dependem de aplicativo externo; não há conversão automática.
+- Removidos o painel de upload e o seletor WebVTT; novos uploads de legenda são negados. Legendas existentes de Libras permanecem preservadas internamente. Vídeos antigos de audiodescrição não aparecem como áudio no público; o painel orienta substituir por áudio ou desativar. Não foram apagados arquivos existentes.
+- Migração `0005_audio_description.sql` testada duas vezes no PGlite: novo tipo interno `audiodescricao_audio`, novos MIME sem duplicação, dados/RLS/privacidade do staging preservados. Responsável confirmou aplicação com sucesso no Supabase hospedado nesta conversa.
+- `npm run check`, `npm run lint`, `npm test` (**60 testes**), build com base `/ciencia-sem-barreiras/`, `worker:check` e `worker:smoke` aprovados. Testes de arquivos reais gerados por FFmpeg: sete formatos de silêncio aceitos; MP4/WMV com vídeo rejeitados ao declarar MIME de áudio; confirmação com respostas Range 206 exercitada para M4A/WMA válidos e falsificados. Publicação testa MIME derivado do servidor, remoção de referências a pôster/legenda no áudio, rejeição de vídeo legado habilitado e publicação após desativá-lo.
+- **15 cenários Playwright passaram**: sete formatos enviados, aliases MIME de WAV/WMA normalizados, vídeo recusado no seletor, rascunho privado, publicação e refresh, sete players sem vídeo/autoplay, WAV carregado e pausado, link do arquivo com MIME correto, transcrição acessível, WebVTT ausente e axe-core sem violações nesse cenário. Reflow adicional de audiodescrição em 320/390/1440 px. As demais verificações existentes de responsividade, PDFs, fotos e QR continuaram passando. API simulada; upload/publicação autenticados no serviço hospedado não foram realizados nesta execução.
+- Validação limitada a formatos e metadados, sem decodificação completa ou antivírus. Leituras de metadados M4A/ASF limitadas a 2 MiB, até 64 caixas MP4 e identificação dos streams iniciais Ogg em até 64 KiB; formatos incomuns além desses limites são recusados. Limitações e referências técnicas em `EXECUCAO.md`.
+- Worker publicado na versão `de9ccfe0-d4da-4929-be60-d7d5dd603fac`. Smoke cloud após deploy passou: leitura pública disponível e leituras privadas, mutações/RPC e upload anônimos negados. A confirmação da migração hospedada foi do responsável; não foi feito upload autenticado de áudio na nuvem nesta execução.
+
 ## Atualização: ordem dos recursos e título — 06/11/2026
 
 - Navegação e seções públicas na ordem Texto, Fotos, Libras, Audiodescrição e Atividades, também refletida nas seções correspondentes do editor. Título “Vídeo com audiodescrição” reduzido para “Audiodescrição” no site, prévia e painel.

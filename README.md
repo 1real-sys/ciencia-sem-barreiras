@@ -2,7 +2,7 @@
 
 **Implementação local disponível:** Angular 22, painel administrativo, Worker TypeScript, migrações Supabase, simulador local e testes executáveis. Veja [como executar](docs/EXECUCAO.md) e as [evidências e limitações](docs/ACEITE.md). A ativação dos serviços hospedados depende das contas e dos secrets do responsável.
 
-> **Requisitos fechados em 04/11/2026:** GitHub Pages (frontend), Supabase Database + Storage (conteúdo), Cloudflare Worker (admin/autenticação/publicação), painel administrativo com **uma senha** (sem cadastro), atualização pública sem commit, nove espaços, texto/fotos/áudio/vídeo Libras/vídeo de audiodescrição, links QR configuráveis, design mobile-first e amigável para crianças.
+> **Requisitos de 04/11/2026, com atualização de audiodescrição em 06/11/2026:** GitHub Pages (frontend), Supabase Database + Storage (conteúdo), Cloudflare Worker (admin/autenticação/publicação), painel administrativo com **uma senha** (sem cadastro), atualização pública sem commit, nove espaços, texto/fotos/áudio/vídeo Libras/audiodescrição em áudio, links QR configuráveis, design mobile-first e amigável para crianças.
 
 ## 0. LEIA PRIMEIRO
 - `AGENTS.md`: regras mandatórias do Codex.
@@ -60,14 +60,14 @@ Angular Router **`withHashLocation()`** para GitHub Pages:
 - `/#/sobre` — Sobre o projeto
 - `/#/admin` — área de gestão; interface só entra após sessão validada pelo Worker (a página e os JS não são secretos).
 
-Cada espaço: título, imagem de capa e galeria, texto-base escrito pela estudante, vídeo em Libras, vídeo com audiodescrição, **áudio independente opcional** (porque também foi solicitado upload de áudio), metadados de acessibilidade, status de publicação por seção. Não inventar vídeo ou texto. Quando recurso não publicado, dizer `Conteúdo em preparação` e não colocar botão sem ação.
+Cada espaço: título, imagem de capa e galeria, texto-base escrito pela estudante, vídeo em Libras, audiodescrição somente em áudio, **áudio independente opcional** (porque também foi solicitado upload de áudio), metadados de acessibilidade, status de publicação por seção. Não inventar vídeo ou texto. Quando recurso não publicado, dizer `Conteúdo em preparação` e não colocar botão sem ação.
 
 Home: título exato `Explore os espaços de Biologia da Escola da Ciência – Biologia e História`; subtítulo exato `Conheça os animais, explore diferentes ambientes e descubra como a natureza funciona.`; CTA exato `Explorar os ambientes`. Seção `Por que criamos este projeto?` usar texto exato disponível no briefing original e preservado em `docs/TEXTO_INSTITUCIONAL.md`; não substituir por marketing genérico. Página sobre: projeto independente, não oficial, estudantes de Pedagogia, alfabetização científica e diferentes modos de acesso à informação. Não inventar aprovação ou medições.
 
 ## 5. Painel — requisitos de aceite prioritários
 - Entrada por **uma senha compartilhada** digitada em formulário, validada exclusivamente pelo Worker em HTTPS. Sessão via cookie `HttpOnly; Secure; SameSite=None` se cross-origin (além de `credentials:include` e CORS restrito), ou usar arquitetura same-site com domínio próprio se possível. `SameSite=None` pode sofrer bloqueio por políticas de cookies terceiros: incluir avaliação real e alternativa segura (token de acesso de curta duração mantido *somente em memória*, com CSRF/origin checks e sem persistir). Nunca contar com segurança via URL secreta.
 - Área após entrar: dashboard de nove cartões, estado de publicação, último update, acesso de editar e pré-visualizar.
-- Editor por espaço: título informativo fixo, campos `texto base` (com títulos, parágrafos, listas e links sanitizados), descrição de imagens e créditos, upload imagem/galeria, upload áudio, upload vídeo Libras, upload vídeo audiodescrição; legendas e transcrições; remover/substituir arquivos, com confirmação.
+- Editor por espaço: título informativo fixo, campos `texto base` (com títulos, parágrafos, listas e links sanitizados), descrição de imagens e créditos, upload imagem/galeria, upload áudio, upload vídeo Libras, upload áudio de audiodescrição; transcrições; remover/substituir arquivos, com confirmação.
 - **Rascunho x publicação**: salvar rascunho privado não altera o site público. Prévia de rascunho restrita à sessão admin; `Publicar` torna o conteúdo aprovado visível ao público. Possibilitar retirar seção do ar sem apagar mídia; histórico mínimo e recuperação básica.
 - Em cada upload: selecionar arquivo, validar MIME real/tamanho, barra de progresso e resultado. Para grandes arquivos NÃO passar bytes pelo Worker; Worker autoriza upload assinado de curta duração para Storage; navegador faz upload direto ao Storage, Worker valida e associa ao registro na finalização. Não disponibilizar bucket público para escrita anônima.
 - Após publicar: toast + anúncio `aria-live`, atualizar consulta pública e abrir prévia ao vivo. Falhas de upload/salvamento devem ser visíveis e recuperáveis; não dizer salvo antes da confirmação.

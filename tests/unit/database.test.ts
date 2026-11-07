@@ -30,6 +30,9 @@ beforeAll(async () => {
   const pdfMigration = await readFile('supabase/migrations/0004_pdf_documents.sql', 'utf8');
   await db.exec(pdfMigration);
   await db.exec(pdfMigration);
+  const audioMigration = await readFile('supabase/migrations/0005_audio_description.sql', 'utf8');
+  await db.exec(audioMigration);
+  await db.exec(audioMigration);
   id = (await db.query<{ id: string }>("select id from spaces where slug='aquario-marinho'"))
     .rows[0].id;
 }, 60000);
@@ -56,8 +59,10 @@ describe('PostgreSQL migrations and permission boundaries', () => {
     for (const bucket of buckets) {
       expect(bucket.allowed_mime_types.filter((m) => m === 'application/pdf')).toHaveLength(1);
       expect(bucket.allowed_mime_types).toContain('image/png');
+      for (const type of ['audio/aac', 'audio/wav', 'audio/x-ms-wma', 'audio/flac'])
+        expect(bucket.allowed_mime_types.filter((m) => m === type)).toHaveLength(1);
     }
-    for (const kind of ['text_pdf', 'activity_pdf']) {
+    for (const kind of ['text_pdf', 'activity_pdf', 'audiodescricao_audio']) {
       await db.query(
         "insert into space_media(space_id,kind,storage_bucket,object_path) values($1,$2,'csb-staging-media','test.pdf')",
         [id, kind],

@@ -1,6 +1,6 @@
 # Configuração do Supabase
 
-Implementação e comandos atuais: [EXECUCAO.md](EXECUCAO.md). Decisões e limites: [DECISOES_IMPLEMENTACAO.md](DECISOES_IMPLEMENTACAO.md). Aplicar as migrações **0001, 0002, 0003 e 0004**, nessa ordem; usar `worker/wrangler.toml` implementado, com Durable Object.
+Implementação e comandos atuais: [EXECUCAO.md](EXECUCAO.md). Decisões e limites: [DECISOES_IMPLEMENTACAO.md](DECISOES_IMPLEMENTACAO.md). Aplicar as migrações **0001, 0002, 0003, 0004 e 0005**, nessa ordem; usar `worker/wrangler.toml` implementado, com Durable Object.
 
 1. Criar projeto Supabase na conta do responsável (a estudante não precisa acessar Supabase).
 2. Copiar Project URL e chave **publishable/anon de leitura** para config PUBLICA do Angular. Configurar segredo **service_role** só no Worker; nunca em `.env` enviado ao GitHub Pages.

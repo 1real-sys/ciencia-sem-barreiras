@@ -142,6 +142,8 @@ const server = http.createServer(async (req, res) => {
       );
     if (p === '/admin/uploads/authorize') {
       if (
+        (b.kind === 'audiodescricao' && !b.mime.startsWith('audio/')) ||
+        b.kind === 'caption' ||
         !slugs.includes(b.slug) ||
         b.size > 50 * 1024 * 1024 ||
         ![
@@ -151,6 +153,10 @@ const server = http.createServer(async (req, res) => {
           'audio/mpeg',
           'audio/mp4',
           'audio/ogg',
+          'audio/aac',
+          'audio/wav',
+          'audio/x-ms-wma',
+          'audio/flac',
           'video/mp4',
           'video/webm',
           'text/vtt',

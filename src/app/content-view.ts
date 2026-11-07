@@ -1,5 +1,5 @@
 import { Component, input } from '@angular/core';
-import { Content } from '../../shared/content';
+import { Content, isAudioMedia } from '../../shared/content';
 @Component({
   selector: 'app-content',
   template: `
@@ -65,26 +65,39 @@ import { Content } from '../../shared/content';
           {{ kind === 'libras' ? 'Veja em Libras' : 'Audiodescrição' }}
         </h2>
         @for (m of content().media; track m.id) {
-          @if (m.kind === kind && m.enabled) {
-            <video
-              crossorigin="anonymous"
-              [poster]="m.poster || ''"
-              controls
-              playsinline
-              preload="metadata"
-              [src]="m.url"
-              [attr.aria-label]="m.alt"
-            >
-              @if (m.caption) {
-                <track
-                  kind="captions"
-                  srclang="pt-BR"
-                  label="Português"
-                  [src]="m.caption"
-                  default
-                />
-              }
-            </video>
+          @if (m.kind === kind && m.enabled && (kind !== 'audiodescricao' || audioMedia(m))) {
+            @if (kind === 'audiodescricao') {
+              <audio controls preload="metadata" [src]="m.url" [attr.aria-label]="m.alt"></audio>
+              <p>
+                <a [href]="m.url" target="_blank" rel="noopener noreferrer"
+                  >Abrir ou baixar áudio: {{ m.alt }}</a
+                >
+              </p>
+              <p class="hint">
+                Se o formato não tocar no seu navegador, abra ou baixe o arquivo para ouvir em outro
+                aplicativo.
+              </p>
+            } @else {
+              <video
+                crossorigin="anonymous"
+                [poster]="m.poster || ''"
+                controls
+                playsinline
+                preload="metadata"
+                [src]="m.url"
+                [attr.aria-label]="m.alt"
+              >
+                @if (m.caption) {
+                  <track
+                    kind="captions"
+                    srclang="pt-BR"
+                    label="Português"
+                    [src]="m.caption"
+                    default
+                  />
+                }
+              </video>
+            }
             @if (m.transcript) {
               <details>
                 <summary>Transcrição</summary>
@@ -117,7 +130,10 @@ import { Content } from '../../shared/content';
 })
 export class ContentView {
   content = input.required<Content>();
+  audioMedia = isAudioMedia;
   has(kind: string) {
-    return this.content().media.some((m) => m.kind === kind && m.enabled);
+    return this.content().media.some(
+      (m) => m.kind === kind && m.enabled && (kind !== 'audiodescricao' || isAudioMedia(m)),
+    );
   }
 }

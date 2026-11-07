@@ -1,3 +1,4 @@
+import { audioOnly, audioSignature } from './audio';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import {
@@ -180,6 +181,11 @@ async function canonical(
 ) {
   const c = structuredClone(content);
   for (const m of c.media) {
+    if (m.kind === 'audiodescricao' && !m.enabled && !m.path) {
+      m.caption = '';
+      m.poster = '';
+      continue;
+    }
     if (m.path) {
       const row = checked(
         await client
@@ -192,6 +198,16 @@ async function canonical(
       );
       if (!row.metadata.validated || row.metadata.kind !== m.kind)
         fail(422, 'Arquivo ainda não validado.');
+      m.mime = row.metadata.mime || '';
+      if (m.kind === 'audiodescricao') {
+        if (m.enabled && !allowedMediaType('audiodescricao', m.mime || ''))
+          fail(
+            422,
+            'Audiodescrição aceita somente áudio. Substitua o vídeo por áudio ou desative este recurso.',
+          );
+        m.caption = '';
+        m.poster = '';
+      }
       m.url = '';
     } else {
       let url: URL;
@@ -201,7 +217,7 @@ async function canonical(
         fail(422, 'Informe o endereço HTTPS do vídeo.');
       }
       if (
-        !['libras', 'audiodescricao'].includes(m.kind) ||
+        m.kind !== 'libras' ||
         url.protocol !== 'https:' ||
         !(env.EXTERNAL_MEDIA_HOSTS || '').split(',').includes(url.hostname) ||
         url.username ||
@@ -259,11 +275,9 @@ export function signature(mime: string, b: Uint8Array) {
   if (mime === 'image/png') return [137, 80, 78, 71, 13, 10, 26, 10].every((v, i) => b[i] === v);
   if (mime === 'image/jpeg') return b[0] === 255 && b[1] === 216 && b[2] === 255;
   if (mime === 'image/webp') return ascii.startsWith('RIFF') && ascii.slice(8, 12) === 'WEBP';
-  if (mime === 'video/mp4' || mime === 'audio/mp4') return ascii.slice(4, 8) === 'ftyp';
+  if (mime.startsWith('audio/')) return audioSignature(mime, b);
+  if (mime === 'video/mp4') return ascii.slice(4, 8) === 'ftyp';
   if (mime === 'video/webm') return b[0] === 26 && b[1] === 69 && b[2] === 223 && b[3] === 163;
-  if (mime === 'audio/ogg') return ascii.startsWith('OggS');
-  if (mime === 'audio/mpeg')
-    return ascii.startsWith('ID3') || (b[0] === 255 && (b[1] & 224) === 224);
   if (mime === 'text/vtt')
     return (
       ascii.replace(/^\uFEFF/, '').startsWith('WEBVTT') &&
@@ -519,7 +533,7 @@ async function handle(request: Request, env: Env) {
         space_id: s.id,
         kind:
           (
-            { libras: 'libras_video', audiodescricao: 'audiodescricao_video' } as Record<
+            { libras: 'libras_video', audiodescricao: 'audiodescricao_audio' } as Record<
               string,
               string
             >
@@ -553,11 +567,30 @@ async function handle(request: Request, env: Env) {
       Number(head.headers.get('Content-Length')) > MAX_FILE
     )
       fail(422, 'O arquivo recebido não corresponde ao envio autorizado.');
-    const response = await fetch(url.signedUrl, { headers: { Range: 'bytes=0-4095' } });
-    const bytes = await prefix(response);
-    if (!signature(m.metadata.mime, bytes)) {
+    const readRange = async (offset: number, length: number) => {
+      const response = await fetch(url.signedUrl, {
+        headers: { Range: `bytes=${offset}-${offset + length - 1}` },
+      });
+      if ((offset > 0 && response.status !== 206) || !response.ok)
+        fail(422, 'Não foi possível verificar o áudio.');
+      if (
+        response.status === 206 &&
+        !response.headers.get('Content-Range')?.startsWith(`bytes ${offset}-`)
+      )
+        fail(422, 'Não foi possível verificar o arquivo.');
+      return prefix(response, length);
+    };
+    const valid = m.metadata.mime.startsWith('audio/')
+      ? await audioOnly(m.metadata.mime, m.metadata.size, readRange)
+      : signature(m.metadata.mime, await readRange(0, Math.min(m.metadata.size, 4096)));
+    if (!valid) {
       await client.storage.from('csb-staging-media').remove([m.object_path]);
-      fail(422, 'O conteúdo do arquivo não corresponde ao formato permitido.');
+      fail(
+        422,
+        m.metadata.kind === 'audiodescricao'
+          ? 'Audiodescrição aceita somente arquivos de áudio válidos, sem vídeo.'
+          : 'O conteúdo do arquivo não corresponde ao formato permitido.',
+      );
     }
     checkedWrite(
       await client

@@ -14,6 +14,7 @@ export const blockSchema = z.object({
 export const mediaSchema = z.object({
   id: z.string().uuid(),
   kind: z.enum(MEDIA_KINDS),
+  mime: z.string().max(100).default(''),
   url: safeUrl.default(''),
   path: z.string().max(256).default(''),
   alt: z.string().max(1000).default(''),

@@ -1,6 +1,6 @@
 # Segurança obrigatória — senha única sem cadastro
 
-Implementação e comandos atuais: [EXECUCAO.md](EXECUCAO.md). Decisões e limites: [DECISOES_IMPLEMENTACAO.md](DECISOES_IMPLEMENTACAO.md). Aplicar as migrações **0001, 0002, 0003 e 0004**, nessa ordem; usar `worker/wrangler.toml` implementado, com Durable Object.
+Implementação e comandos atuais: [EXECUCAO.md](EXECUCAO.md). Decisões e limites: [DECISOES_IMPLEMENTACAO.md](DECISOES_IMPLEMENTACAO.md). Aplicar as migrações **0001, 0002, 0003, 0004 e 0005**, nessa ordem; usar `worker/wrangler.toml` implementado, com Durable Object.
 
 **A escolha de senha compartilhada dispensa registro de usuário, NÃO dispensa proteção do backend.** A URL do painel pode ser conhecida por qualquer pessoa; dados publicados são públicos, mas edição precisa autenticação real.
 

@@ -13,6 +13,9 @@ import {
   SPACES,
   emptyContent,
   allowedMediaType,
+  AUDIO_ACCEPT,
+  normalizedMime,
+  isAudioMedia,
   MAX_FILE,
 } from '../../shared/content';
 interface EditorData {
@@ -207,6 +210,12 @@ interface EditorData {
         (change)="upload($event, kind[0])"
         [disabled]="busy()"
       />
+      @if (kind[0] === 'audiodescricao') {
+        <p>
+          Somente áudio: MP3, AAC, WMA, WAV, M4A, OGG/Opus ou FLAC. Até 50 MB. Prefira MP3 para
+          facilitar a reprodução nos celulares.
+        </p>
+      }
       @if (kind[0] === 'image') {
         <p>Você pode selecionar várias fotos de uma vez ou adicionar outras depois.</p>
       }
@@ -216,7 +225,7 @@ interface EditorData {
           Prefira PDFs com texto selecionável e leitura acessível.
         </p>
       }
-      @if (kind[0] === 'libras' || kind[0] === 'audiodescricao') {
+      @if (kind[0] === 'libras') {
         <button class="secondary" (click)="external(kind[0])">
           Adicionar vídeo por endereço HTTPS
         </button>
@@ -224,6 +233,12 @@ interface EditorData {
       @for (m of content.media; track m.id; let i = $index) {
         @if (m.kind === kind[0]) {
           <div class="media-editor">
+            @if (m.kind === 'audiodescricao' && !audioMedia(m)) {
+              <p>
+                Este recurso antigo não é um áudio compatível. Substitua por um arquivo de áudio ou
+                desative antes de publicar.
+              </p>
+            }
             <label
               ><input type="checkbox" [(ngModel)]="m.enabled" />Exibir este recurso ao
               publicar</label
@@ -244,7 +259,7 @@ interface EditorData {
                 imagem</label
               ><button class="secondary" (click)="cover(i)">Definir como capa</button>
             }
-            @if (!m.path) {
+            @if (!m.path && m.kind === 'libras') {
               <label [for]="'external-' + m.id"
                 >URL direta do vídeo HTTPS (domínio autorizado)</label
               ><input [id]="'external-' + m.id" [(ngModel)]="m.url" type="url" />
@@ -252,22 +267,13 @@ interface EditorData {
             @if (m.kind === 'audio' || m.kind === 'libras' || m.kind === 'audiodescricao') {
               <label [for]="'transcript-' + m.id">Transcrição</label
               ><textarea [id]="'transcript-' + m.id" [(ngModel)]="m.transcript"></textarea>
-              @if (m.kind !== 'audio') {
+              @if (m.kind === 'libras') {
                 <label [for]="'poster-' + m.id">Pôster do vídeo</label
                 ><select [id]="'poster-' + m.id" [(ngModel)]="m.poster">
                   <option value="">Sem pôster</option>
                   @for (p of content.media; track p.id) {
                     @if (p.kind === 'image') {
                       <option [value]="p.url">{{ p.alt || 'Imagem enviada' }}</option>
-                    }
-                  }
-                </select>
-                <label [for]="'caption-' + m.id">Legenda WebVTT</label
-                ><select [id]="'caption-' + m.id" [(ngModel)]="m.caption">
-                  <option value="">Sem legenda</option>
-                  @for (c of content.media; track c.id) {
-                    @if (c.kind === 'caption') {
-                      <option [value]="c.url">{{ c.alt || 'Legenda enviada' }}</option>
                     }
                   }
                 </select>
@@ -303,6 +309,7 @@ export class Admin {
   data = inject(Data);
   spaces = SPACES;
   coverImage = spaceCover;
+  audioMedia = isAudioMedia;
   password = '';
   busy = signal(false);
   message = signal('');
@@ -319,10 +326,9 @@ export class Admin {
     ['text_pdf', 'PDF do texto', 'application/pdf'],
     ['image', 'Fotos', 'image/jpeg,image/png,image/webp'],
     ['libras', 'Vídeo em Libras', 'video/mp4,video/webm'],
-    ['audiodescricao', 'Audiodescrição', 'video/mp4,video/webm'],
+    ['audiodescricao', 'Audiodescrição', AUDIO_ACCEPT],
     ['activity_pdf', 'Atividades', 'application/pdf'],
-    ['audio', 'Áudio (opcional)', 'audio/mpeg,audio/mp4,audio/ogg'],
-    ['caption', 'Legendas WebVTT', 'text/vtt'],
+    ['audio', 'Áudio (opcional)', AUDIO_ACCEPT],
   ];
   previewContent() {
     return structuredClone(this.content);
@@ -466,7 +472,10 @@ export class Admin {
   }
   async upload(event: Event, kind: string, index?: number) {
     const input = event.target as HTMLInputElement;
-    const files = Array.from(input.files || []);
+    const files = Array.from(input.files || []).map((file) => {
+      const mime = normalizedMime(file.type, file.name);
+      return mime === file.type ? file : new File([file], file.name, { type: mime });
+    });
     if (!files.length) return;
     if (index !== undefined && !confirm('Substituir este arquivo no rascunho?')) return;
     if (files.some((f) => f.size <= 0 || f.size > MAX_FILE || !allowedMediaType(kind, f.type))) {
@@ -491,6 +500,7 @@ export class Admin {
           const media: Media = {
             id: m.id,
             kind: kind as Media['kind'],
+            mime: f.type,
             path: m.path,
             url: m.url,
             alt: old?.alt || (f.type === 'application/pdf' ? f.name.replace(/\.pdf$/i, '') : ''),
@@ -498,8 +508,8 @@ export class Admin {
             illustration: old?.illustration ?? true,
             rights: old?.rights ?? false,
             transcript: old?.transcript || '',
-            caption: old?.caption || '',
-            poster: old?.poster || '',
+            caption: kind === 'audiodescricao' ? '' : old?.caption || '',
+            poster: kind === 'audiodescricao' ? '' : old?.poster || '',
             enabled: true,
           };
           if (index !== undefined) this.content.media[index] = media;

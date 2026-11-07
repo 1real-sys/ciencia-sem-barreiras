@@ -35,7 +35,7 @@ npm run worker:check
 npm run worker:smoke
 ```
 
-`npm test` executa Vitest, incluindo PostgreSQL local via PGlite: aplica as quatro migrações, cria roles de teste e verifica permissões e transações. O teste remove apenas a instrução de extensão `pgcrypto`, pois `gen_random_uuid()` já faz parte desse runtime. O schema Storage usado no teste é mínimo; o serviço Storage real depende da validação cloud.
+`npm test` executa Vitest, incluindo PostgreSQL local via PGlite: aplica as cinco migrações, cria roles de teste e verifica permissões e transações. O teste remove apenas a instrução de extensão `pgcrypto`, pois `gen_random_uuid()` já faz parte desse runtime. O schema Storage usado no teste é mínimo; o serviço Storage real depende da validação cloud.
 
 `npm run test:e2e` inicia frontend e simulador automaticamente em portas isoladas (14200 e 18787), sem reutilizar sessões de desenvolvimento. Execute `npm run build` antes: um dos cenários serve o artefato compilado. Usa `/usr/bin/google-chrome` localmente; altere `CHROME_BIN` se necessário. No CI, instala e usa Chromium do Playwright. Gera screenshots em `test-results/` e relatório em `playwright-report/`. O widget externo VLibras é bloqueado nesses testes para resultados reproduzíveis; os testes não avaliam a tradução do widget.
 
@@ -43,7 +43,7 @@ npm run worker:smoke
 
 ## Configuração real: responsável técnico
 
-1. Crie um projeto Supabase dedicado. Aplique **na ordem** `0001_init.sql`, `0002_publication.sql`, `0003_mata_atlantica_2.sql` e `0004_pdf_documents.sql` pelo SQL Editor do responsável ou CLI. As migrações criam nove ambientes, buckets, RLS e duas funções transacionais. Não repetir a segunda migração em banco já migrado.
+1. Crie um projeto Supabase dedicado. Aplique **na ordem** `0001_init.sql`, `0002_publication.sql`, `0003_mata_atlantica_2.sql`, `0004_pdf_documents.sql` e `0005_audio_description.sql` pelo SQL Editor do responsável ou CLI. As migrações criam nove ambientes, buckets, RLS e duas funções transacionais. Não repetir a segunda migração em banco já migrado.
 2. Em projeto existente, revise políticas em `storage.objects`: não deve haver política de escrita anônima nem leitura do bucket staging. Não reutilize um projeto com políticas permissivas sem revisão. Guarde backup antes de migrar dados existentes.
 3. Configure `worker/wrangler.toml`: `ALLOWED_ORIGINS` é uma lista de origins exatos separados por vírgula, sem barra final nem caminho. Exemplo: `https://DONO.github.io`. Deixe localhost apenas se o desenvolvimento remoto for necessário. `EXTERNAL_MEDIA_HOSTS` é uma lista explícita de hostnames autorizados para URLs diretas HTTPS de vídeo, sem espaços; vazia bloqueia vídeos externos.
 4. Cadastre os secrets interativamente, sem colocá-los em arquivos públicos:
@@ -87,7 +87,7 @@ O smoke verifica negativas de leitura/escrita, RPC e Storage anônimos, além da
 
 1. Abra `/#/admin`, entre e escolha um dos nove ambientes.
 2. Em Texto, adicione parágrafos, títulos, itens de lista ou links HTTPS. O botão Negrito aplica destaque à parte. A colagem é texto simples; HTML nunca é executado. Não é necessário escrever Markdown ou JSON.
-3. Anexe fotos, áudios e vídeos. Aguarde o recebimento. Preencha descrição, crédito, transcrição e direito de uso. Adicione legenda VTT e selecione-a no vídeo. Escolha uma imagem enviada como pôster, se desejado. Use **Definir como capa** para mover uma imagem ao primeiro lugar da galeria. Para substituir/remover, confirme no diálogo.
+3. Anexe fotos, áudios e vídeos. Aguarde o recebimento. Preencha descrição, crédito, transcrição e direito de uso. Escolha uma imagem enviada como pôster, se desejado. Use **Definir como capa** para mover uma imagem ao primeiro lugar da galeria. Para substituir/remover, confirme no diálogo.
 4. Salve o rascunho. Ele continua privado; a prévia reproduz as mesmas seções da página pública. Após 30 minutos, reabra o ambiente para renovar URLs temporárias de prévia.
 5. Clique Publicar e confirme. Apenas após a resposta do servidor aparece o sucesso. Abra a versão publicada. A próxima leitura busca a revisão nova sem rebuild ou commit.
 6. Para retirar uma seção, desmarque sua exibição e publique. A mídia permanece recuperável. Histórico permite recuperar versões como rascunho; revise e publique novamente para torná-las públicas.
@@ -119,3 +119,17 @@ Em Texto, o campo “Anexar PDF do texto” complementa o editor de parágrafos.
 Fotos aceita várias imagens na mesma seleção e adições posteriores. Limite de 50 MB por arquivo e 40 recursos no total por ambiente. Se um envio múltiplo falhar, os arquivos já recebidos ficam no editor para salvar; a mensagem informa quantos chegaram. Selecione apenas os restantes para repetir.
 
 A publicação mantém staging privado e URLs temporárias, promovendo PDFs junto das demais mídias antes da troca atômica do snapshot. O servidor valida MIME, tamanho e assinatura `%PDF-1.x`/`%PDF-2.0`; essa checagem não equivale a análise completa de conteúdo ou antivírus. PDFs são links em nova aba, sem inserir conteúdo no HTML da aplicação. Acessibilidade do documento depende de texto selecionável, estrutura e revisão editorial do próprio PDF.
+
+## Audiodescrição somente em áudio (06/11/2026)
+
+Com 0001–0004 já aplicadas, executar apenas `0005_audio_description.sql` e publicar o Worker antes do frontend. A migração permite AAC, WAV, WMA e FLAC nos buckets e adiciona o tipo interno `audiodescricao_audio`, mantendo os registros antigos. Pode ser repetida.
+
+Audiodescrição aceita MP3, AAC (ADTS/ADIF), WAV, WMA, M4A, OGG/Opus e FLAC, até 50 MB. Não aceita upload de vídeo nem endereço externo. A transcrição continua obrigatória ao publicar. Há player sem autoplay e link para abrir/baixar; formatos sem suporte nativo no navegador podem ser ouvidos em aplicativo externo. Preferir MP3 para distribuição. Não há transcodificação automática.
+
+O Worker valida MIME e assinatura; em M4A inspeciona as trilhas do `moov` (somente `soun`) com leituras Range que pulam o conteúdo de mídia; em WMA verifica os objetos de streams ASF, rejeitando vídeo. Metadados MP4/ASF limitados a 2 MiB; MP4 aceita até 64 caixas de topo. Ogg verifica identificação dos streams iniciais (até 64 KiB). Essas verificações são de formato/metadados, não decodificação completa de áudio. Os testes usam arquivos reais de silêncio sintético e vídeos de quadro preto, restritos a `tests/fixtures/audio/`.
+
+Audiodescrições antigas em vídeo não aparecem no player público. No painel, substituir o recurso por áudio ou desativá-lo antes de publicar; arquivos antigos não são apagados automaticamente. O servidor deriva o MIME dos metadados validados e não aceita o MIME fornecido no rascunho como prova de áudio.
+
+Retirados do painel o upload “Legendas WebVTT” e o seletor de legendas; novos uploads VTT são rejeitados. Legendas já associadas a Libras permanecem preservadas internamente, sem exclusão de arquivos.
+
+Referências: [áudio em navegadores (MDN)](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/audio), [contêiner ASF (Microsoft)](https://learn.microsoft.com/en-us/windows/win32/medfound/asf-support-in-media-foundation), [ISO BMFF (W3C)](https://www.w3.org/TR/mse-byte-stream-format-isobmff/).

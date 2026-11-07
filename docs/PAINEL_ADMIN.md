@@ -8,8 +8,8 @@ A estudante **não acessa Github, não sabe Git e não pode editar código**. A 
 2. Dashboard: título `Gerenciar ambientes`, nove cartões iguais aos do site (com miniatura), selo `Publicado`, `Rascunho` ou `Pendente`, `Editar` e `Ver no site`, data de publicação.
 3. Editor: cabeçalho nome fixo do espaço, tabs/seções **Texto**, **Fotos**, **Libras**, **Audiodescrição**, **Áudio (opcional)** e **QR Codes**. Ao lado/acima há preview mobile. Campo conteúdo amigável rich text limitado (cabeçalhos, negrito, listas, links seguros) com suporte a colagem de texto simples; não exigir JSON nem Markdown.
 4. `Fotos`: upload uma ou várias, miniaturas, substituir/remover, posição de capa, texto alternativo obrigatório, crédito e flag `fotografia real`/`ilustração`. Não confundir autorização de imagem com disponibilidade; exigir confirmação de direito de uso antes de publicar imagem real.
-5. `Libras`: upload vídeo ou URL externa, legenda/arquivo VTT/transcrição quando aplicável, pôster e descrição. Sem arquivo => `Conteúdo em preparação`.
-6. `Audiodescrição`: upload arquivo de vídeo descritivo ou URL externa; opção adicional áudio MP3/M4A separado; transcrição em texto; não rotular uma narração qualquer como audiodescrição sem conteúdo adequado.
+5. `Libras`: upload vídeo ou URL externa, transcrição quando aplicável, pôster e descrição. Sem arquivo => `Conteúdo em preparação`.
+6. `Audiodescrição`: somente upload de áudio MP3, AAC, WAV, WMA, M4A, OGG/Opus ou FLAC, com transcrição em texto; não rotular uma narração qualquer como audiodescrição sem conteúdo adequado.
 7. `Salvar rascunho`: mantém dados privados para edição posterior. Exibir estado saving/success/error acessível. Prévia usa draft e NÃO altera site público.
 8. `Publicar`: revisar confirmação e campos de acessibilidade, publicar versão validada e informar quando finalizou; botões `Visualizar versão publicada`, `Copiar link` e `Voltar aos ambientes`.
 9. `QR Codes`: interface gera até quatro tipos por ambiente somente após configurar o endereço definitivo; permite habilitar/desabilitar tipos sem quebrar URLs já impressas. Visualização de QR com nome do espaço e destino; download SVG/PNG se funcional, caso contrário não colocar botão falso.
@@ -38,3 +38,5 @@ A estudante **não acessa Github, não sabe Git e não pode editar código**. A 
 - PDFs usam título, crédito, rascunho, prévia em nova aba e publicação; podem ser substituídos, desabilitados ou removidos. Máximo 50 MB por arquivo.
 - Fotos aceita várias imagens em uma seleção ou envios sucessivos. Máximo 40 recursos totais por ambiente, incluindo os outros tipos.
 - Área pública apresenta links de PDFs em Texto e Atividades, com estado “Conteúdo em preparação” quando não há arquivos publicados. O controle de Texto inclui seus PDFs; Atividades é independente.
+
+Atualização de 06/11/2026: removidos upload e seletor de legendas WebVTT. Audiodescrição não oferece pôster nem endereço de vídeo; usar arquivo de áudio.

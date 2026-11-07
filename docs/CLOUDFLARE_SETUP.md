@@ -1,6 +1,6 @@
 # Cloudflare Worker (API administrativa)
 
-Implementação e comandos atuais: [EXECUCAO.md](EXECUCAO.md). Decisões e limites: [DECISOES_IMPLEMENTACAO.md](DECISOES_IMPLEMENTACAO.md). Aplicar as migrações **0001, 0002, 0003 e 0004**, nessa ordem; usar `worker/wrangler.toml` implementado, com Durable Object.
+Implementação e comandos atuais: [EXECUCAO.md](EXECUCAO.md). Decisões e limites: [DECISOES_IMPLEMENTACAO.md](DECISOES_IMPLEMENTACAO.md). Aplicar as migrações **0001, 0002, 0003, 0004 e 0005**, nessa ordem; usar `worker/wrangler.toml` implementado, com Durable Object.
 
 1. Criar Worker na conta do responsável, com `wrangler` usando `worker/` como projeto lógico. Configurar domínio do Worker HTTPS e CORS apenas para **origin** do GitHub Pages e `http://localhost:<porta>` de dev.
 2. Segredos, nunca no git: `ADMIN_PASSWORD`, `SESSION_SIGNING_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`. Usar `npx wrangler secret put ADMIN_PASSWORD` etc.; `worker/.dev.vars` local deve estar em `.gitignore`.
