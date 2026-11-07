@@ -1,5 +1,12 @@
 # Aceite V4 — evidências locais de 04/11/2026
 
+## Atualização: transcrição opcional em Libras — 07/11/2026
+
+- Removida a exigência de transcrição ao publicar vídeo em Libras, com campo “Transcrição (opcional)” no painel. Texto preenchido anteriormente é preservado; campo vazio não gera bloco de transcrição público. Áudio/audiodescrição mantêm sua validação e mensagens agora identificam a seção correspondente.
+- Tipos, lint, build com base `/ciencia-sem-barreiras/`, **63 testes unitários e 15 cenários Playwright aprovados**. Publicação do Worker em teste aceita Libras com transcrição vazia, preserva referências de mídia e ainda recusa audiodescrição sem transcrição com aviso específico. Browser envia vídeo sintético, deixa campo opcional vazio, publica e confere player de Libras sem acordeão de transcrição vazio. Não foi feita publicação autenticada do vídeo real na nuvem nesta execução.
+- Uma execução da suíte revelou corrida no popup PDF ao voltar/avançar rapidamente: evento de fechamento pendente podia atuar sobre o diálogo reaberto. Fechamento originado no histórico agora é distinguido do manual, eventos antigos não desmontam um popup reaberto e entrada atual não é duplicada. Regressão inclui três ciclos rápidos de Voltar/Avançar, além de Esc, foco e fechamento manual. A suíte completa passou após a correção.
+- Worker foi publicado para remover imediatamente o bloqueio; frontend será atualizado por Pages após push. Não há migração de banco.
+
 ## Atualização: apresentação da fonte — 06/11/2026
 
 - Campo “Crédito e licença” renomeado para “Fonte”, com orientação para nome de autor, link ou referência. Apresentação pública/prévia usa o prefixo fixo `fonte: ` em PDFs de Texto/Atividades, fotos, Libras e audiodescrição. Exemplo de conteúdo existente `eu mesma` passa a aparecer como `fonte: eu mesma`. Valores não são alterados; chave interna `credit`, estrutura e validações mantidas. Confirmação de direito de uso de imagem permanece separada.

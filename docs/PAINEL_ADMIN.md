@@ -8,7 +8,7 @@ A estudante **não acessa Github, não sabe Git e não pode editar código**. A 
 2. Dashboard: título `Gerenciar ambientes`, nove cartões iguais aos do site (com miniatura), selo `Publicado`, `Rascunho` ou `Pendente`, `Editar` e `Ver no site`, data de publicação.
 3. Editor: cabeçalho nome fixo do espaço, tabs/seções **Texto**, **Fotos**, **Libras**, **Audiodescrição**, **Áudio (opcional)** e **QR Codes**. Ao lado/acima há preview mobile. Campo conteúdo amigável rich text limitado (cabeçalhos, negrito, listas, links seguros) com suporte a colagem de texto simples; não exigir JSON nem Markdown.
 4. `Fotos`: upload uma ou várias, miniaturas, substituir/remover, posição de capa, texto alternativo obrigatório, crédito e flag `fotografia real`/`ilustração`. Não confundir autorização de imagem com disponibilidade; exigir confirmação de direito de uso antes de publicar imagem real.
-5. `Libras`: upload vídeo ou URL externa, transcrição quando aplicável, pôster e descrição. Sem arquivo => `Conteúdo em preparação`.
+5. `Libras`: upload vídeo ou URL externa, transcrição opcional, pôster e descrição. Sem arquivo => `Conteúdo em preparação`.
 6. `Audiodescrição`: somente upload de áudio MP3, AAC, WAV, WMA, M4A, OGG/Opus ou FLAC, com transcrição em texto; não rotular uma narração qualquer como audiodescrição sem conteúdo adequado.
 7. `Salvar rascunho`: mantém dados privados para edição posterior. Exibir estado saving/success/error acessível. Prévia usa draft e NÃO altera site público.
 8. `Publicar`: revisar confirmação e campos de acessibilidade, publicar versão validada e informar quando finalizou; botões `Visualizar versão publicada`, `Copiar link` e `Voltar aos ambientes`.
@@ -44,3 +44,5 @@ Atualização de 06/11/2026: removidos upload e seletor de legendas WebVTT. Audi
 ## Fonte dos recursos — 06/11/2026
 
 O campo antes chamado “Crédito e licença” agora se chama “Fonte”. Recebe texto livre: autor, nome de instituição, link ou outra referência. Digitar apenas o valor; o site acrescenta o prefixo fixo `fonte: `. Exemplo: campo `eu mesma` → `fonte: eu mesma`. Vale para PDFs, fotos, Libras e audiodescrição. Conteúdo já salvo é preservado e passa a receber o prefixo na apresentação; a chave interna `credit` é mantida, sem migração. A confirmação de direito de uso de fotos continua separada.
+
+Atualização de 07/11/2026: publicar vídeo em Libras com transcrição vazia é permitido. O painel mostra “Transcrição (opcional)”; textos já preenchidos continuam disponíveis.

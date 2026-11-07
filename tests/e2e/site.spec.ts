@@ -359,6 +359,12 @@ test('PDFs in Texto and Atividades and multiple photos stay private until public
   }
   await visitor.goForward();
   await expect(modal).toBeVisible();
+  for (let attempt = 0; attempt < 3; attempt++) {
+    await visitor.goBack();
+    await expect(modal).not.toBeVisible();
+    await visitor.goForward();
+    await expect(modal).toBeVisible();
+  }
   await visitor.goBack();
   await expect(modal).not.toBeVisible();
   await visitor.goBack();
@@ -471,6 +477,24 @@ test('Audiodescrição accepts audio, rejects video and removes WebVTT controls'
     await resource.getByLabel('Fonte', { exact: true }).fill('Silêncio sintético para QA');
     await resource.getByLabel('Transcrição').fill('Silêncio gerado apenas para teste.');
   }
+  await page.getByLabel('Anexar Vídeo em Libras (máximo 50 MB)').setInputFiles({
+    name: 'libras.mp4',
+    mimeType: 'video/mp4',
+    buffer: await readFile('tests/fixtures/audio/video.mp4'),
+  });
+  await expect(page.getByRole('status')).toContainText('Arquivo recebido');
+  const librasResource = page
+    .locator('section.panel')
+    .filter({ has: page.locator('#upload-libras') })
+    .locator('.media-editor')
+    .last();
+  await librasResource
+    .getByLabel('Descrição do recurso')
+    .fill('Vídeo sintético para teste de Libras');
+  await librasResource.getByLabel('Fonte', { exact: true }).fill('Arquivo de teste para QA');
+  await expect(librasResource.getByLabel('Transcrição (opcional)', { exact: true })).toHaveValue(
+    '',
+  );
   await page.getByRole('button', { name: 'Salvar rascunho', exact: true }).click();
   await expect(page.getByRole('status')).toContainText('Rascunho salvo');
   const visitor = await page.context().newPage();
@@ -480,6 +504,8 @@ test('Audiodescrição accepts audio, rejects video and removes WebVTT controls'
   await expect(page.getByRole('status')).toContainText('Atualização publicada');
   await visitor.reload();
   await expect(visitor.locator('#audiodescricao')).toBeFocused();
+  await expect(visitor.locator('#libras video')).toHaveCount(1);
+  await expect(visitor.locator('#libras details')).toHaveCount(0);
   await expect(visitor.locator('#audiodescricao video')).toHaveCount(0);
   await expect(visitor.locator('#audiodescricao audio')).toHaveCount(9);
   await expect(visitor.locator('#audiodescricao audio[autoplay]')).toHaveCount(0);

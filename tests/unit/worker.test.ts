@@ -532,7 +532,7 @@ describe('Worker security boundary', () => {
           path: 'space/video.mp4',
           alt: 'Video',
           credit: 'QA',
-          transcript: 'Test transcript',
+          transcript: '',
           caption: ids[1],
           poster: ids[0],
         },
@@ -602,6 +602,7 @@ describe('Worker security boundary', () => {
     expect(copy).toHaveBeenCalledTimes(6);
     expect(fakeDb.rpc).toHaveBeenCalledTimes(1);
     const args = fakeDb.rpc.mock.calls[0][1];
+    expect(args.p_content.media[2].transcript).toBe('');
     expect(args.p_content.media[2].caption).toBe(
       'https://example.supabase.co/public/space/caption.vtt',
     );
@@ -641,6 +642,17 @@ describe('Worker security boundary', () => {
     content.media[5].mime = 'audio/wav';
     content.media[5].enabled = true;
     fakeDb.rpc.mockClear();
+    content.media[5].transcript = '';
+    const missingAudioTranscript = await worker.fetch(
+      req('/admin/spaces/aquario-marinho/publish', 'POST', { revision: 4 }, token),
+      env,
+    );
+    expect(missingAudioTranscript.status).toBe(422);
+    expect(await missingAudioTranscript.json()).toEqual({
+      error: 'Adicione a transcrição da audiodescrição.',
+    });
+    expect(fakeDb.rpc).not.toHaveBeenCalled();
+    content.media[5].transcript = 'Texto de teste';
     fakeDb.storage.from.mockReturnValue({
       copy: async () => ({ data: null, error: Error('failed') }),
       exists: async () => ({ data: false, error: null }),

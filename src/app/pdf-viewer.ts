@@ -109,6 +109,7 @@ export class PdfViewer implements OnDestroy {
   error = signal('');
   historyPending = signal(false);
   private readonly historyId = crypto.randomUUID();
+  private closingFromHistory = false;
   private injector = inject(Injector);
   private opener: HTMLElement | null = null;
   private viewer?: DocumentViewer;
@@ -131,7 +132,7 @@ export class PdfViewer implements OnDestroy {
   open(recordHistory = true) {
     if (this.dialog.nativeElement.open || this.historyPending()) return;
     this.opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    if (recordHistory) {
+    if (recordHistory && history.state?.csbPdf !== this.historyId) {
       // Same URL: Back dismisses the PDF before leaving the current environment.
       history.pushState({ ...history.state, csbPdf: this.historyId }, '', location.href);
     }
@@ -143,8 +144,10 @@ export class PdfViewer implements OnDestroy {
     const cleaningUp = this.historyPending();
     this.historyPending.set(false);
     if (history.state?.csbPdf === this.historyId) this.open(false);
-    else if (this.dialog.nativeElement.open) this.dialog.nativeElement.close();
-    else if (cleaningUp) this.restoreFocus();
+    else if (this.dialog.nativeElement.open) {
+      this.closingFromHistory = true;
+      this.dialog.nativeElement.close();
+    } else if (cleaningUp) this.restoreFocus();
   }
   backdrop(event: MouseEvent) {
     const dialog = this.dialog.nativeElement;
@@ -159,8 +162,12 @@ export class PdfViewer implements OnDestroy {
       dialog.close();
   }
   closed() {
+    const fromHistory = this.closingFromHistory;
+    this.closingFromHistory = false;
+    // A queued close event can arrive after Forward has reopened the dialog.
+    if (this.dialog.nativeElement.open) return;
     this.release();
-    if (history.state?.csbPdf === this.historyId) {
+    if (!fromHistory && history.state?.csbPdf === this.historyId) {
       // Button, backdrop and Esc remove the temporary entry as well.
       this.historyPending.set(true);
       history.back();
