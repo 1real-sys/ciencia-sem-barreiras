@@ -544,8 +544,9 @@ test('Audiodescrição accepts audio, rejects video and removes WebVTT controls'
   await expect(visitor.locator('#audiodescricao audio')).toHaveCount(9);
   await expect(visitor.locator('#audiodescricao audio[autoplay]')).toHaveCount(0);
   await expect(visitor.locator('#audiodescricao audio[controls]')).toHaveCount(9);
-  const wav = visitor.getByRole('link', { name: 'Abrir ou baixar áudio: Áudio de teste wav' });
-  const wavUrl = await wav.getAttribute('href');
+  await expect(visitor.locator('#audiodescricao a')).toHaveCount(0);
+  const wav = visitor.locator('#audiodescricao audio[aria-label="Áudio de teste wav"]');
+  const wavUrl = await wav.getAttribute('src');
   const response = await visitor.request.get(wavUrl!);
   expect(response.headers()['content-type']).toBe('audio/wav');
   const player = visitor.locator('#audiodescricao audio').nth(2);

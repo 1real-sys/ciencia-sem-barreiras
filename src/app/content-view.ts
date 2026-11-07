@@ -68,15 +68,6 @@ import { PdfViewer } from './pdf-viewer';
           @if (m.kind === kind && m.enabled && (kind !== 'audiodescricao' || audioMedia(m))) {
             @if (kind === 'audiodescricao') {
               <audio controls preload="metadata" [src]="m.url" [attr.aria-label]="m.alt"></audio>
-              <p>
-                <a [href]="m.url" target="_blank" rel="noopener noreferrer"
-                  >Abrir ou baixar áudio: {{ m.alt }}</a
-                >
-              </p>
-              <p class="hint">
-                Se o formato não tocar no seu navegador, abra ou baixe o arquivo para ouvir em outro
-                aplicativo.
-              </p>
             } @else {
               <video
                 crossorigin="anonymous"

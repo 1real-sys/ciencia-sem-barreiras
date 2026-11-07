@@ -1,5 +1,10 @@
 # Aceite V4 — evidências locais de 04/11/2026
 
+## Atualização: Audiodescrição sem link extra — 07/11/2026
+
+- Removidos o link “Abrir ou baixar áudio” e o aviso associado do componente compartilhado pelos ambientes e pela prévia. Player nativo, controles, nome acessível e fonte preservados.
+- Tipos, lint, build com base `/ciencia-sem-barreiras/` e cenário Playwright de Audiodescrição aprovados. Cenário verifica nove players com controles, ausência de links extras, bytes WAV acessíveis pela URL do player, carregamento sem autoplay, layout em 320/390/1440px e axe-core. API simulada; publicação Pages será acionada pelo push.
+
 ## Atualização: logo no destaque da home — 07/11/2026
 
 - A imagem principal da home usa `imagens/logoprojeto.jpeg`, também presente no cabeçalho. Removida a legenda da antiga ilustração. Enquadramento recorta as margens vazias; mistura com o fundo e ajuste de contraste integram o branco do JPEG ao site. Arquivo original e textos da home preservados.
