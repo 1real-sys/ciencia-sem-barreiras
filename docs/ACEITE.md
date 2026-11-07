@@ -1,5 +1,11 @@
 # Aceite V4 — evidências locais de 04/11/2026
 
+## Atualização: PDF de Texto em popup — 06/11/2026
+
+- PDFs de “Vamos conhecer este ambiente?” abrem em diálogo modal dentro da página, também no editor e na prévia. Leitor nativo do navegador em iframe com título, botão Fechar PDF, fechamento por Esc/área externa e retorno do foco ao acionador. Fonte descarregada ao fechar; fundo sem rolagem enquanto o popup está aberto.
+- URLs de recurso validadas como HTTPS (HTTP somente em loopback para QA) antes de criar o recurso confiável Angular. A origem do PDF continua sendo o upload validado pelo Worker. Download opcional por blob, sem navegação/nova aba, com mensagem de erro recuperável; depende de CORS da mídia. A visualização embutida depende do leitor PDF do navegador; baixar é a alternativa oferecida no popup.
+- Tipos, lint e build com base `/ciencia-sem-barreiras/` aprovados. **15 cenários Playwright passaram**, com abertura do modal, foco inicial no botão Fechar, iframe com título e URL do PDF, nenhuma página/aba adicional, URL principal preservada, Esc, botão Fechar, foco restituído, bytes do download conferidos e axe-core sem violações no modal. Layout validado em 320/390/1440 px; captura `test-results/pdf-popup-1440.png` revisada visualmente com PDF renderizado no leitor. API simulada, sem comprovação de comportamento em todos os leitores PDF móveis ou revisão manual com leitor de tela.
+
 ## Atualização: Audiodescrição em áudio e retirada do WebVTT — 06/11/2026
 
 - Audiodescrição aceita apenas MP3, AAC, WAV, WMA, M4A, OGG/Opus e FLAC. Painel sem campo de vídeo/endereço externo/pôster nessa seção; público com player de áudio, transcrição e link para abrir/baixar. Sem autoplay. Formatos sem suporte no navegador dependem de aplicativo externo; não há conversão automática.

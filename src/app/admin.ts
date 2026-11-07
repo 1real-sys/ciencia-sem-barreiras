@@ -5,6 +5,7 @@ import { RouterLink } from '@angular/router';
 import QRCode from 'qrcode';
 import { Data } from './data';
 import { ContentView } from './content-view';
+import { PdfViewer } from './pdf-viewer';
 import { spaceCover } from './covers';
 import {
   Content,
@@ -25,7 +26,7 @@ interface EditorData {
 }
 @Component({
   selector: 'app-admin',
-  imports: [FormsModule, RouterLink, ContentView, NgTemplateOutlet],
+  imports: [FormsModule, RouterLink, ContentView, NgTemplateOutlet, PdfViewer],
   template: `
     @if (!data.token()) {
       <div class="login">
@@ -279,7 +280,9 @@ interface EditorData {
                 </select>
               }
             }
-            @if (m.kind === 'text_pdf' || m.kind === 'activity_pdf') {
+            @if (m.kind === 'text_pdf') {
+              <app-pdf [media]="m" />
+            } @else if (m.kind === 'activity_pdf') {
               <p>
                 <a [href]="m.url" target="_blank" rel="noopener noreferrer"
                   >Abrir PDF em nova aba</a

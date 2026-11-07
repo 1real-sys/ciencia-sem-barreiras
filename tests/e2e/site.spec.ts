@@ -229,10 +229,16 @@ test('PDFs in Texto and Atividades and multiple photos stay private until public
     const resource = page.locator('.media-editor').last();
     await resource.getByLabel('Título do PDF').fill(name);
     await resource.getByLabel('Crédito e licença').fill('Documento de teste criado para QA');
-    await expect(resource.getByRole('link', { name: 'Abrir PDF em nova aba' })).toHaveAttribute(
-      'target',
-      '_blank',
-    );
+    if (kind === 'text_pdf') {
+      await expect(
+        resource.getByRole('button', { name: name + ' (PDF)', exact: true }),
+      ).toHaveAttribute('aria-haspopup', 'dialog');
+    } else {
+      await expect(resource.getByRole('link', { name: 'Abrir PDF em nova aba' })).toHaveAttribute(
+        'target',
+        '_blank',
+      );
+    }
   }
   const png = Buffer.from(
     'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a/p8AAAAASUVORK5CYII=',
@@ -265,11 +271,49 @@ test('PDFs in Texto and Atividades and multiple photos stay private until public
   const visitor = await page.context().newPage();
   await visitor.goto('/#/ambientes/aquario-lagoa?recurso=atividades');
   await expect(visitor.locator('#atividades')).toBeFocused();
-  await expect(visitor.locator('#texto a, #atividades a')).toHaveCount(0);
+  await expect(visitor.locator('#texto button, #atividades a')).toHaveCount(0);
   await page.getByRole('button', { name: 'Publicar', exact: true }).click();
   await expect(page.getByRole('status')).toContainText('Atualização publicada');
   await visitor.reload();
-  await expect(visitor.locator('#texto a')).toContainText('Texto para leitura');
+  const opener = visitor
+    .locator('#texto')
+    .getByRole('button', { name: 'Texto para leitura (PDF)', exact: true });
+  await expect(opener).toBeVisible();
+  const pageCount = page.context().pages().length;
+  const originalUrl = visitor.url();
+  await opener.click();
+  const modal = visitor.getByRole('dialog', { name: 'Texto para leitura', exact: true });
+  await expect(modal).toBeVisible();
+  await expect(modal.getByRole('button', { name: 'Fechar PDF', exact: true })).toBeFocused();
+  const frame = modal.locator('iframe');
+  await expect(frame).toHaveAttribute('title', 'Leitor de PDF: Texto para leitura');
+  await expect(frame).toHaveAttribute('src', /^http:\/\/localhost:18787\/files\//);
+  for (const width of [320, 390, 1440]) {
+    await visitor.setViewportSize({ width, height: 900 });
+    const bounds = await modal.boundingBox();
+    expect(bounds!.x).toBeGreaterThanOrEqual(0);
+    expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(width);
+    expect(await visitor.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
+  }
+  await visitor.screenshot({ path: 'test-results/pdf-popup-1440.png' });
+  expect((await new AxeBuilder({ page: visitor }).analyze()).violations).toEqual([]);
+  const downloadPending = visitor.waitForEvent('download');
+  await modal.getByRole('button', { name: 'Baixar PDF', exact: true }).click();
+  const download = await downloadPending;
+  expect(await readFile((await download.path())!)).toEqual(pdf);
+  await modal.getByRole('button', { name: 'Fechar PDF', exact: true }).focus();
+  await visitor.keyboard.press('Escape');
+  await expect(modal).not.toBeVisible();
+  await expect(opener).toBeFocused();
+  await opener.click();
+  await expect(modal).toBeVisible();
+  await modal.getByRole('button', { name: 'Fechar PDF', exact: true }).click();
+  await expect(modal).not.toBeVisible();
+  await expect(opener).toBeFocused();
+  expect(page.context().pages()).toHaveLength(pageCount);
+  expect(visitor.url()).toBe(originalUrl);
   await expect(visitor.locator('#texto .pending')).toHaveCount(0);
   await expect(visitor.locator('#atividades a')).toContainText('Atividade em PDF');
   await expect(visitor.locator('#fotos img')).toHaveCount(2);
@@ -289,7 +333,7 @@ test('PDFs in Texto and Atividades and multiple photos stay private until public
   await page.getByRole('button', { name: 'Publicar', exact: true }).click();
   await expect(page.getByRole('status')).toContainText('Atualização publicada');
   await visitor.reload();
-  await expect(visitor.locator('#texto a')).toHaveCount(0);
+  await expect(visitor.locator('#texto button')).toHaveCount(0);
   await expect(visitor.locator('#atividades a')).not.toHaveAttribute('href', previous!);
   expect((await new AxeBuilder({ page: visitor }).analyze()).violations).toEqual([]);
   await visitor.close();

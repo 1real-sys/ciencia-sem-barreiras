@@ -1,7 +1,9 @@
 import { Component, input } from '@angular/core';
 import { Content, isAudioMedia } from '../../shared/content';
+import { PdfViewer } from './pdf-viewer';
 @Component({
   selector: 'app-content',
+  imports: [PdfViewer],
   template: `
     <section id="texto" tabindex="-1">
       <h2>Vamos conhecer este ambiente?</h2>
@@ -32,11 +34,9 @@ import { Content, isAudioMedia } from '../../shared/content';
       @if (content().textEnabled) {
         @for (m of content().media; track m.id) {
           @if (m.kind === 'text_pdf' && m.enabled) {
-            <p>
-              <a [href]="m.url" target="_blank" rel="noopener noreferrer"
-                >{{ m.alt }} (PDF, abre em nova aba)</a
-              ><br /><small>{{ m.credit }}</small>
-            </p>
+            <div class="pdf-document">
+              <app-pdf [media]="m" /><br /><small>{{ m.credit }}</small>
+            </div>
           }
         }
       }

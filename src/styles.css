@@ -277,6 +277,60 @@ audio {
   max-width: 100%;
   width: 100%;
 }
+.pdf-document {
+  margin: 16px 0;
+}
+.pdf-dialog {
+  width: min(1100px, calc(100% - 24px));
+  height: min(920px, 92dvh);
+  max-width: calc(100% - 24px);
+  max-height: 92dvh;
+  padding: 16px;
+  border: 0;
+  border-radius: 16px;
+  margin: auto;
+  color: var(--ink);
+  background: white;
+}
+.pdf-dialog[open] {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.pdf-dialog::backdrop {
+  background: rgb(23 52 62 / 70%);
+}
+body:has(.pdf-dialog[open]) {
+  overflow: hidden;
+}
+.pdf-heading,
+.pdf-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.pdf-heading h2,
+.pdf-actions p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.pdf-heading h2 {
+  font-size: 1.2rem;
+  flex: 1 1 180px;
+}
+.pdf-frame {
+  width: 100%;
+  flex: 1;
+  min-height: 120px;
+  border: 1px solid #cbded6;
+  border-radius: 8px;
+}
+.pdf-actions p {
+  flex: 1 1 220px;
+  font-size: 0.85rem;
+}
 footer {
   border-top: 1px solid #cbded6;
   margin-top: 50px;
