@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import './app/environments.css';
 :root {
   --ink: #17343e;
   --teal: #075766;

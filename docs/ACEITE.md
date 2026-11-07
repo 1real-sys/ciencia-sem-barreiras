@@ -1,5 +1,11 @@
 # Aceite V4 — evidências locais de 04/11/2026
 
+## Atualização: organização visual dos ambientes — 07/11/2026
+
+- Alterações restritas à listagem `/ambientes` e às nove páginas de ambiente: fotos proporcionais, cartões com títulos e ações alinhados, capa com as imagens já existentes, leitura com largura controlada, seções mais próximas e navegação entre ambientes. Recursos com indicação acessível do destino selecionado e alvos de pelo menos 44px. Paleta, conteúdo, slugs, home e painel preservados; CSS limitado às duas classes das rotas públicas.
+- Executados e aprovados: tipos, lint, **63 testes unitários**, build com base `/ciencia-sem-barreiras/`, Worker dry-run e smoke local com Durable Object, **24 cenários Playwright**. Incluem listagem e acesso aos nove ambientes em 320/360/375/390/414/768/1024/1440px, retorno à lista, teclado, cinco destinos de recursos com refresh/QR, sequência anterior/próximo, reflow com fonte duplicada, ausência de overflow, PDFs, mídias, isolamento de rascunho e publicação simulada. Axe-core sem violações nos escopos executados, incluindo listagem/detalhe em 320/768/1440px. Capturas `test-results/environments-list-{largura}.png` e `environment-detail-{largura}.png`; revisão visual em Chromium de celular e tablet.
+- Limites: testes em navegador automatizado, sem aparelho físico ou NVDA/VoiceOver/TalkBack. VLibras bloqueado nas suítes locais para independência da rede; fluxo editorial com API simulada. Aviso preexistente de otimização CommonJS de `qrcode` no build. Publicação pelo workflow Pages após push; resultado remoto deve ser confirmado separadamente.
+
 ## Atualização: Audiodescrição sem link extra — 07/11/2026
 
 - Removidos o link “Abrir ou baixar áudio” e o aviso associado do componente compartilhado pelos ambientes e pela prévia. Player nativo, controles, nome acessível e fonte preservados.

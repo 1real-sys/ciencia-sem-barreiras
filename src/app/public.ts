@@ -8,6 +8,10 @@ import { spaceCover } from './covers';
 @Component({
   selector: 'app-public',
   imports: [RouterLink, ContentView],
+  host: {
+    '[class.environment-list]': "mode === 'list'",
+    '[class.environment-page]': "mode === 'space'",
+  },
   template: `
     @if (mode === 'home') {
       <div class="hero">
@@ -92,14 +96,27 @@ import { spaceCover } from './covers';
     @if (mode === 'space') {
       <a routerLink="/ambientes" class="back">← Todos os ambientes</a>
       @if (space) {
-        <div class="space-heading">
-          <span class="eyebrow">{{ space[2] }}</span>
-          <h1>{{ space[1] }}</h1>
-          <p>Observe, descubra e escolha como explorar.</p>
+        <div class="space-intro">
+          <div class="space-heading">
+            <span class="eyebrow">{{ space[2] }}</span>
+            <h1>{{ space[1] }}</h1>
+            <p>Observe, descubra e escolha como explorar.</p>
+          </div>
+          <figure class="space-cover">
+            <img [src]="cover(space[0]).src" alt="" width="640" height="400" />
+            <figcaption>{{ cover(space[0]).label }}</figcaption>
+          </figure>
         </div>
         <nav class="resource-nav" aria-label="Recursos do ambiente">
           @for (r of resources; track r[0]) {
-            <a [routerLink]="[]" [queryParams]="{ recurso: r[0] }">{{ r[1] }}</a>
+            <a
+              [routerLink]="[]"
+              [queryParams]="{ recurso: r[0] }"
+              [attr.aria-current]="
+                route.snapshot.queryParamMap.get('recurso') === r[0] ? 'location' : null
+              "
+              >{{ r[1] }}</a
+            >
           }
         </nav>
         @if (loading()) {
@@ -112,6 +129,18 @@ import { spaceCover } from './covers';
         } @else {
           <app-content [content]="snapshot()?.content || empty()" />
         }
+        <nav class="space-pagination" aria-label="Outros ambientes">
+          @if (previousSpace; as previous) {
+            <a [routerLink]="['/ambientes', previous[0]]"
+              ><span>← Ambiente anterior</span><strong>{{ previous[1] }}</strong></a
+            >
+          }
+          @if (nextSpace; as next) {
+            <a [routerLink]="['/ambientes', next[0]]"
+              ><span>Próximo ambiente →</span><strong>{{ next[1] }}</strong></a
+            >
+          }
+        </nav>
       } @else {
         <h1>Ambiente não encontrado</h1>
         <p>Escolha um dos nove ambientes para continuar.</p>
@@ -138,6 +167,12 @@ export class PublicPage {
   loading = signal(false);
   error = signal('');
   empty = emptyContent;
+  get previousSpace() {
+    return SPACES[SPACES.findIndex((s) => s === this.space) - 1];
+  }
+  get nextSpace() {
+    return SPACES[SPACES.findIndex((s) => s === this.space) + 1];
+  }
   constructor() {
     this.route.paramMap.subscribe((p) => {
       this.space = SPACES.find((s) => s[0] === p.get('slug'));
