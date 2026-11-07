@@ -10,8 +10,27 @@ import {
   signal,
   ViewChild,
 } from '@angular/core';
-import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
-import { MAX_FILE, Media } from '../../shared/content';
+import { Media } from '../../shared/content';
+import type { PDFDocumentLoadingTask } from 'pdfjs-dist';
+import type { PDFViewer as DocumentViewer } from 'pdfjs-dist/web/pdf_viewer.mjs';
+
+let viewerStyles: Promise<void> | undefined;
+function loadViewerStyles(url: string): Promise<void> {
+  if (!viewerStyles)
+    viewerStyles = new Promise<void>((resolve, reject) => {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = url;
+      link.onload = () => resolve();
+      link.onerror = () => {
+        link.remove();
+        viewerStyles = undefined;
+        reject(new Error('PDF styles unavailable'));
+      };
+      document.head.append(link);
+    });
+  return viewerStyles;
+}
 
 @Component({
   selector: 'app-pdf',
@@ -34,40 +53,54 @@ import { MAX_FILE, Media } from '../../shared/content';
     >
       <div class="pdf-heading">
         <h2>{{ media().alt || 'Documento PDF' }}</h2>
-        <button type="button" autofocus (click)="dialog.close()">Fechar PDF</button>
-      </div>
-      @if (source()) {
-        <iframe
-          class="pdf-frame"
-          [src]="source()"
-          [title]="'Leitor de PDF: ' + (media().alt || 'Documento')"
-          referrerpolicy="no-referrer"
-        ></iframe>
-      }
-      <div class="pdf-actions">
-        <p>Se o leitor não carregar, baixe o PDF para ler no seu aparelho.</p>
-        <button type="button" class="secondary" [disabled]="downloading()" (click)="download()">
-          {{ downloading() ? 'Baixando…' : 'Baixar PDF' }}
+        <button
+          type="button"
+          class="pdf-close"
+          autofocus
+          aria-label="Fechar PDF"
+          (click)="dialog.close()"
+        >
+          Fechar <span aria-hidden="true">×</span>
         </button>
       </div>
-      @if (error()) {
-        <p role="alert">{{ error() }}</p>
-      }
+      <div class="pdf-stage">
+        <div
+          #reader
+          class="pdf-reader"
+          tabindex="0"
+          role="region"
+          [attr.aria-label]="'Leitura do PDF: ' + (media().alt || 'Documento')"
+        >
+          <div class="pdfViewer"></div>
+        </div>
+        @if (loading()) {
+          <p class="pdf-status" role="status">Carregando texto…</p>
+        }
+        @if (error()) {
+          <div class="pdf-status" role="alert">
+            <p>{{ error() }}</p>
+            <button type="button" class="secondary" (click)="load()">Tentar novamente</button>
+          </div>
+        }
+      </div>
     </dialog>
   `,
 })
 export class PdfViewer implements OnDestroy {
   media = input.required<Media>();
   @ViewChild('dialog', { static: true }) dialog!: ElementRef<HTMLDialogElement>;
-  source = signal<SafeResourceUrl | null>(null);
-  downloading = signal(false);
+  @ViewChild('reader', { static: true }) reader!: ElementRef<HTMLDivElement>;
+  loading = signal(false);
   error = signal('');
   historyPending = signal(false);
   private readonly historyId = crypto.randomUUID();
-  private sanitizer = inject(DomSanitizer);
   private injector = inject(Injector);
   private opener: HTMLElement | null = null;
-  private controller?: AbortController;
+  private viewer?: DocumentViewer;
+  private task?: PDFDocumentLoadingTask;
+  private resize?: ResizeObserver;
+  private generation = 0;
+  private lifecycle = new AbortController();
 
   private url(): string {
     const url = new URL(this.media().url, document.baseURI);
@@ -83,19 +116,12 @@ export class PdfViewer implements OnDestroy {
   open(recordHistory = true) {
     if (this.dialog.nativeElement.open || this.historyPending()) return;
     this.opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    this.error.set('');
-    try {
-      // Resource URLs are allowed only for uploaded PDFs, using HTTPS (or local QA).
-      this.source.set(this.sanitizer.bypassSecurityTrustResourceUrl(this.url()));
-    } catch {
-      this.source.set(null);
-      this.error.set('Não foi possível abrir este PDF.');
-    }
     if (recordHistory) {
       // Same URL: Back dismisses the PDF before leaving the current environment.
       history.pushState({ ...history.state, csbPdf: this.historyId }, '', location.href);
     }
     this.dialog.nativeElement.showModal();
+    void this.load();
   }
   @HostListener('window:popstate')
   historyChanged() {
@@ -118,8 +144,7 @@ export class PdfViewer implements OnDestroy {
       dialog.close();
   }
   closed() {
-    this.controller?.abort();
-    this.source.set(null);
+    this.release();
     if (history.state?.csbPdf === this.historyId) {
       // Button, backdrop and Esc remove the temporary entry as well.
       this.historyPending.set(true);
@@ -129,31 +154,76 @@ export class PdfViewer implements OnDestroy {
   private restoreFocus() {
     afterNextRender(() => this.opener?.focus(), { injector: this.injector });
   }
-  async download() {
-    this.downloading.set(true);
+  async load() {
+    this.release();
+    const generation = this.generation;
+    this.loading.set(true);
     this.error.set('');
-    this.controller = new AbortController();
     try {
-      const response = await fetch(this.url(), { signal: this.controller.signal });
-      if (!response.ok || response.headers.get('Content-Type')?.split(';')[0] !== 'application/pdf')
-        throw Error();
-      const blob = await response.blob();
-      if (!blob.size || blob.size > MAX_FILE) throw Error();
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download =
-        (this.media().alt || 'documento').replace(/[^\p{L}\p{N} ._-]/gu, '').slice(0, 120) + '.pdf';
-      link.click();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      const url = this.url();
+      // The viewer module reads the PDF.js API exported by the core module.
+      const assets = new URL('pdfjs/', document.baseURI).href;
+      const [pdfjs] = await Promise.all([
+        import('pdfjs-dist'),
+        loadViewerStyles(assets + 'pdf_viewer.css'),
+      ]);
+      const { PDFViewer, EventBus } = await import('pdfjs-dist/web/pdf_viewer.mjs');
+      if (generation !== this.generation || !this.dialog.nativeElement.open) return;
+      pdfjs.GlobalWorkerOptions.workerSrc = assets + 'pdf.worker.min.mjs';
+      pdfjs.GlobalWorkerOptions.rendererSrc = assets + 'pdf.renderer.min.mjs';
+      if (!this.viewer) {
+        const eventBus = new EventBus();
+        const options = {
+          container: this.reader.nativeElement,
+          eventBus,
+          removePageBorders: true,
+          annotationMode: pdfjs.AnnotationMode.DISABLE,
+          enableAutoLinking: false,
+          maxCanvasPixels: 8 * 1024 * 1024,
+          abortSignal: this.lifecycle.signal,
+        };
+        this.viewer = new PDFViewer(options);
+        eventBus.on('pagesinit', () => {
+          this.viewer!.currentScaleValue = 'page-width';
+          this.viewer!.update();
+        });
+        eventBus.on('pagerendered', () => this.loading.set(false));
+        this.resize = new ResizeObserver(() => {
+          if (this.viewer?.pdfDocument && this.dialog.nativeElement.open) {
+            this.viewer.currentScaleValue = 'page-width';
+            this.viewer.update();
+          }
+        });
+      }
+      this.task = pdfjs.getDocument({
+        url,
+        enableXfa: false,
+        standardFontDataUrl: assets + 'standard_fonts/',
+        cMapUrl: assets + 'cmaps/',
+        cMapPacked: true,
+        wasmUrl: assets + 'wasm/',
+      });
+      const pdfDocument = await this.task.promise;
+      if (generation !== this.generation || !this.dialog.nativeElement.open) return;
+      this.viewer.setDocument(pdfDocument);
+      this.resize?.observe(this.reader.nativeElement);
     } catch {
-      if (!this.controller.signal.aborted)
-        this.error.set('Não foi possível baixar o PDF. Tente novamente.');
-    } finally {
-      this.downloading.set(false);
+      if (generation === this.generation) {
+        this.loading.set(false);
+        this.error.set('Não foi possível carregar o texto. Tente novamente.');
+      }
     }
   }
+  private release() {
+    this.generation++;
+    this.resize?.disconnect();
+    this.viewer?.setDocument(null);
+    void this.task?.destroy().catch(() => undefined);
+    this.task = undefined;
+    this.loading.set(false);
+  }
   ngOnDestroy() {
-    this.controller?.abort();
+    this.release();
+    this.lifecycle.abort();
   }
 }

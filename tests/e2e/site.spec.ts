@@ -282,28 +282,46 @@ test('PDFs in Texto and Atividades and multiple photos stay private until public
   await expect(opener).toBeVisible();
   const pageCount = page.context().pages().length;
   const originalUrl = visitor.url();
+  const snapshot = await (
+    await visitor.request.get('http://localhost:18787/public/spaces/aquario-lagoa')
+  ).json();
+  const textPdf = snapshot.content.media.find(
+    (media: { kind: string; url: string }) => media.kind === 'text_pdf',
+  );
+  await visitor.route(
+    textPdf.url,
+    (route) => route.fulfill({ status: 503, body: 'Temporary failure' }),
+    { times: 1 },
+  );
   await opener.click();
   const modal = visitor.getByRole('dialog', { name: 'Texto para leitura', exact: true });
   await expect(modal).toBeVisible();
   await expect(modal.getByRole('button', { name: 'Fechar PDF', exact: true })).toBeFocused();
-  const frame = modal.locator('iframe');
-  await expect(frame).toHaveAttribute('title', 'Leitor de PDF: Texto para leitura');
-  await expect(frame).toHaveAttribute('src', /^http:\/\/localhost:18787\/files\//);
+  await expect(modal.getByRole('alert')).toContainText('Não foi possível carregar o texto');
+  await modal.getByRole('button', { name: 'Tentar novamente', exact: true }).click();
+  await expect(modal.locator('.pdf-reader canvas').first()).toBeVisible();
+  await expect(modal.locator('.textLayer')).toContainText('Documento de teste para QA');
+  await expect(modal.locator('iframe')).toHaveCount(0);
+  await expect(modal.getByRole('button')).toHaveCount(1);
+  await expect(modal.getByText('Se o leitor', { exact: false })).toHaveCount(0);
+  await expect(modal.getByRole('button', { name: /baixar|imprimir|opções/i })).toHaveCount(0);
   for (const width of [320, 390, 1440]) {
     await visitor.setViewportSize({ width, height: 900 });
+    await expect
+      .poll(
+        async () => (await modal.locator('.pdf-reader canvas').first().boundingBox())?.width || 0,
+      )
+      .toBeGreaterThan(width * 0.8);
     const bounds = await modal.boundingBox();
     expect(bounds!.x).toBeGreaterThanOrEqual(0);
     expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(width);
     expect(await visitor.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
     );
+    await visitor.screenshot({ path: 'test-results/pdf-popup-' + width + '.png' });
   }
   await visitor.screenshot({ path: 'test-results/pdf-popup-1440.png' });
   expect((await new AxeBuilder({ page: visitor }).analyze()).violations).toEqual([]);
-  const downloadPending = visitor.waitForEvent('download');
-  await modal.getByRole('button', { name: 'Baixar PDF', exact: true }).click();
-  const download = await downloadPending;
-  expect(await readFile((await download.path())!)).toEqual(pdf);
   await modal.getByRole('button', { name: 'Fechar PDF', exact: true }).focus();
   await visitor.keyboard.press('Escape');
   await expect(modal).not.toBeVisible();

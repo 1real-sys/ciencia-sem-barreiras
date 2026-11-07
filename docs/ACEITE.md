@@ -1,5 +1,14 @@
 # Aceite V4 — evidências locais de 04/11/2026
 
+## Atualização: leitor de PDF com foco no texto — 06/11/2026
+
+- Leitor nativo em iframe substituído por PDF.js 6.5.438: página ajustada à largura, canvas e camada de texto selecionável, sem barra do navegador, miniaturas, download, impressão ou menu de três pontos. Retirados a mensagem “Se o leitor...” e o rodapé de download. Único controle de leitura é Fechar, compacto e com alvo de toque mínimo de 44px. Celular usa tela inteira; desktop, até 1280px e 96dvh. Esc, Voltar e retorno do foco preservados.
+- Código e CSS do PDF.js carregados sob demanda; worker, renderer, fontes, CMaps, WASM e imagens locais copiados pelo build para `pdfjs/`. Sem CDN/leitor externo. XFA e anotações/formulários interativos não habilitados; não há scripting manager. Renderização usa fila de páginas visíveis, limite de canvas e liberação do documento/worker ao fechar. O formato/layout do arquivo original é preservado.
+- Tipos, lint, build com base `/ciencia-sem-barreiras/`, **60 testes unitários e 15 cenários Playwright aprovados**. Browser verifica canvas/texto renderizados, largura do documento em 320/390/1440px, ausência de iframe/controles removidos, falha HTTP do arquivo seguida de Tentar novamente com sucesso, axe-core e navegação Voltar/Avançar. Teste do artefato compilado também abre o PDF e confere worker/CSS no subdiretório do Pages. Capturas `test-results/pdf-popup-{320,390,1440}.png`.
+- Revisão local adicional com `imagens/test.pdf`, fornecido pelo responsável: 11 páginas, visualização em 390 e 1440px; captura móvel revisada visualmente (`test-results/pdf-provided-390.png`). Arquivo usado somente em interceptação de rede no navegador de teste, sem upload/publicação e sem inclusão do PDF no commit.
+- Build inicial: aproximadamente 282 kB bruto / 78 kB estimados em transferência; módulos PDF.js (aproximadamente 450+173 kB brutos) e CSS do leitor são posteriores ao clique. `npm audit --omit=dev`: zero vulnerabilidades. Mantém-se o aviso de CommonJS de `qrcode`. A primeira instalação/auditoria sem rede falhou por DNS do sandbox; repetidas com acesso autorizado.
+- Não foi feita validação em aparelho físico ou revisão humana com leitor de tela. PDFs escaneados e estrutura de leitura dependem do documento de origem; a camada textual não é OCR. Deploy Pages será acionado após push; nenhum deploy de Worker/migração foi necessário nesta mudança.
+
 ## Atualização: Voltar fecha o PDF — 06/11/2026
 
 - O popup registra uma entrada temporária no histórico, sem mudar a URL. Voltar fecha primeiro o PDF, preservando o ambiente; o próximo Voltar segue a navegação anterior. Fechar por botão, Esc ou área externa também remove a entrada temporária. Enquanto a remoção está em andamento, o acionador aguarda a conclusão; depois recebe novamente o foco. Avançar reabre o popup enquanto seu componente permanece na página.

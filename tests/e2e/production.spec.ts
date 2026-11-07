@@ -26,10 +26,12 @@ test.beforeAll(async () => {
       const mime: Record<string, string> = {
         '.html': 'text/html',
         '.js': 'text/javascript',
+        '.mjs': 'text/javascript',
         '.css': 'text/css',
         '.svg': 'image/svg+xml',
         '.jpeg': 'image/jpeg',
         '.json': 'application/json',
+        '.wasm': 'application/wasm',
       };
       const bytes = await readFile(file);
       res.writeHead(200, { 'Content-Type': mime[extname(file)] || 'application/octet-stream' });
@@ -92,8 +94,46 @@ test('built Pages artifact serves assets and reopens hash routes under configure
       expect(await cover.evaluate((img) => getComputedStyle(img).filter)).toBe('none');
     }
   }
+  const pdf = await readFile('tests/fixtures/document.pdf');
+  await page.route('**/built-review.pdf', (route) =>
+    route.fulfill({ contentType: 'application/pdf', body: pdf }),
+  );
+  await page.route('**/public/spaces/aquario-marinho', (route) =>
+    route.fulfill({
+      json: {
+        revision: 1,
+        content: {
+          blocks: [],
+          textEnabled: true,
+          media: [
+            {
+              id: 'ed2f07ae-e9c6-4c71-923c-26422c5ac099',
+              kind: 'text_pdf',
+              enabled: true,
+              url: 'http://localhost:4174' + base + 'built-review.pdf',
+              alt: 'Leitura no build',
+              credit: 'QA',
+            },
+          ],
+        },
+      },
+    }),
+  );
   await page.goto('http://localhost:4174' + base + '#/ambientes/aquario-marinho?recurso=texto');
   await expect(page.locator('#texto')).toBeFocused();
+  const readerAssets: string[] = [];
+  page.on('request', (request) => {
+    if (request.url().includes('/pdfjs/')) readerAssets.push(request.url());
+  });
+  await page.getByRole('button', { name: 'Leitura no build (PDF)', exact: true }).click();
+  const modal = page.getByRole('dialog', { name: 'Leitura no build', exact: true });
+  await expect(modal.locator('canvas').first()).toBeVisible();
+  await expect(modal.locator('.textLayer')).toContainText('Documento de teste para QA');
+  expect(readerAssets.some((url) => url.includes(base + 'pdfjs/pdf.worker.min.mjs'))).toBe(true);
+  expect(readerAssets.some((url) => url.includes(base + 'pdfjs/pdf_viewer.css'))).toBe(true);
+  await modal.getByRole('button', { name: 'Fechar PDF' }).click();
+  await expect(modal).not.toBeVisible();
+  await expect.poll(() => page.evaluate(() => history.state?.csbPdf || null)).toBe(null);
   await page.reload();
   await expect(page.locator('#texto')).toBeFocused();
   expect(errors).toEqual([]);

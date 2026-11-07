@@ -281,21 +281,21 @@ audio {
   margin: 16px 0;
 }
 .pdf-dialog {
-  width: min(1100px, calc(100% - 24px));
-  height: min(920px, 92dvh);
-  max-width: calc(100% - 24px);
-  max-height: 92dvh;
-  padding: 16px;
+  width: 100%;
+  height: 100dvh;
+  max-width: 100%;
+  max-height: 100dvh;
+  padding: 0;
   border: 0;
-  border-radius: 16px;
-  margin: auto;
+  border-radius: 0;
+  margin: 0;
   color: var(--ink);
   background: white;
+  overflow: hidden;
 }
 .pdf-dialog[open] {
   display: flex;
   flex-direction: column;
-  gap: 12px;
 }
 .pdf-dialog::backdrop {
   background: rgb(23 52 62 / 70%);
@@ -303,33 +303,66 @@ audio {
 body:has(.pdf-dialog[open]) {
   overflow: hidden;
 }
-.pdf-heading,
-.pdf-actions {
+.pdf-heading {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-.pdf-heading h2,
-.pdf-actions p {
-  margin: 0;
-  overflow-wrap: anywhere;
+  gap: 8px;
+  padding: 4px 8px;
+  border-bottom: 1px solid #cbded6;
+  flex: none;
 }
 .pdf-heading h2 {
-  font-size: 1.2rem;
-  flex: 1 1 180px;
-}
-.pdf-frame {
-  width: 100%;
   flex: 1;
-  min-height: 120px;
-  border: 1px solid #cbded6;
-  border-radius: 8px;
+  min-width: 0;
+  margin: 0;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.pdf-actions p {
-  flex: 1 1 220px;
+.pdf-close {
+  min-height: 44px;
+  padding: 4px 10px;
   font-size: 0.85rem;
+  border-radius: 8px;
+  gap: 6px;
+  flex: none;
+}
+.pdf-stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  background: white;
+}
+.pdf-reader {
+  position: absolute;
+  inset: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+.pdf-reader .pdfViewer {
+  --page-margin: 0 auto 8px;
+  padding: 0;
+}
+.pdf-status {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  text-align: center;
+  margin: 0;
+  padding: 16px;
+  background: white;
+}
+@media (min-width: 768px) {
+  .pdf-dialog {
+    width: min(1280px, 98vw);
+    height: 96dvh;
+    max-width: 98vw;
+    max-height: 96dvh;
+    margin: auto;
+    border-radius: 10px;
+  }
 }
 footer {
   border-top: 1px solid #cbded6;
