@@ -222,8 +222,8 @@ interface EditorData {
       }
       @if (kind[0] === 'text_pdf' || kind[0] === 'activity_pdf') {
         <p>
-          Envie um PDF, informe o título e o crédito. O arquivo aparece no site após publicar.
-          Prefira PDFs com texto selecionável e leitura acessível.
+          Envie um PDF, informe o título e a fonte. O arquivo aparece no site após publicar. Prefira
+          PDFs com texto selecionável e leitura acessível.
         </p>
       }
       @if (kind[0] === 'libras') {
@@ -251,8 +251,13 @@ interface EditorData {
                   : 'Descrição do recurso'
             }}</label
             ><textarea [id]="'alt-' + m.id" [(ngModel)]="m.alt"></textarea
-            ><label [for]="'credit-' + m.id">Crédito e licença</label
-            ><input [id]="'credit-' + m.id" [(ngModel)]="m.credit" />
+            ><label [for]="'credit-' + m.id">Fonte</label
+            ><input
+              [id]="'credit-' + m.id"
+              [(ngModel)]="m.credit"
+              placeholder="Nome do autor, link ou referência"
+              maxlength="1000"
+            />
             @if (m.kind === 'image') {
               <label><input type="checkbox" [(ngModel)]="m.illustration" />É uma ilustração</label
               ><label

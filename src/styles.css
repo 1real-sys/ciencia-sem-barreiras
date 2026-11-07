@@ -280,6 +280,10 @@ audio {
 .pdf-document {
   margin: 16px 0;
 }
+.media-source,
+.gallery figcaption {
+  overflow-wrap: anywhere;
+}
 .pdf-dialog {
   width: 100%;
   height: 100dvh;

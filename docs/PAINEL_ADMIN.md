@@ -40,3 +40,7 @@ A estudante **não acessa Github, não sabe Git e não pode editar código**. A 
 - Área pública apresenta links de PDFs em Texto e Atividades, com estado “Conteúdo em preparação” quando não há arquivos publicados. O controle de Texto inclui seus PDFs; Atividades é independente.
 
 Atualização de 06/11/2026: removidos upload e seletor de legendas WebVTT. Audiodescrição não oferece pôster nem endereço de vídeo; usar arquivo de áudio.
+
+## Fonte dos recursos — 06/11/2026
+
+O campo antes chamado “Crédito e licença” agora se chama “Fonte”. Recebe texto livre: autor, nome de instituição, link ou outra referência. Digitar apenas o valor; o site acrescenta o prefixo fixo `fonte: `. Exemplo: campo `eu mesma` → `fonte: eu mesma`. Vale para PDFs, fotos, Libras e audiodescrição. Conteúdo já salvo é preservado e passa a receber o prefixo na apresentação; a chave interna `credit` é mantida, sem migração. A confirmação de direito de uso de fotos continua separada.

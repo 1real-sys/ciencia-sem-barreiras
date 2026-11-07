@@ -228,7 +228,7 @@ const server = http.createServer(async (req, res) => {
               m.enabled && (!m.alt.trim() || !m.credit.trim() || (m.kind === 'image' && !m.rights)),
           )
         )
-          return send(422, { error: 'Preencha descrição, crédito e direito de uso.' });
+          return send(422, { error: 'Preencha descrição, fonte e direito de uso.' });
         c.media = c.media.filter((m) => m.enabled && (c.textEnabled || m.kind !== 'text_pdf'));
         for (const m of c.media) {
           if (state.uploads[m.id]) state.uploads[m.id].published = true;

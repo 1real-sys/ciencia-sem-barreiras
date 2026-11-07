@@ -35,7 +35,7 @@ import { PdfViewer } from './pdf-viewer';
         @for (m of content().media; track m.id) {
           @if (m.kind === 'text_pdf' && m.enabled) {
             <div class="pdf-document">
-              <app-pdf [media]="m" /><br /><small>{{ m.credit }}</small>
+              <app-pdf [media]="m" /><br /><small class="media-source">fonte: {{ m.credit }}</small>
             </div>
           }
         }
@@ -49,7 +49,7 @@ import { PdfViewer } from './pdf-viewer';
             <figure>
               <img [src]="m.url" [alt]="m.alt" loading="lazy" />
               <figcaption>
-                {{ m.illustration ? 'Ilustração' : 'Fotografia' }} · {{ m.credit }}
+                {{ m.illustration ? 'Ilustração' : 'Fotografia' }} · fonte: {{ m.credit }}
               </figcaption>
             </figure>
           }
@@ -98,6 +98,11 @@ import { PdfViewer } from './pdf-viewer';
                 }
               </video>
             }
+            @if (m.credit) {
+              <p class="media-source">
+                <small>fonte: {{ m.credit }}</small>
+              </p>
+            }
             @if (m.transcript) {
               <details>
                 <summary>Transcrição</summary>
@@ -118,7 +123,7 @@ import { PdfViewer } from './pdf-viewer';
           <p>
             <a [href]="m.url" target="_blank" rel="noopener noreferrer"
               >{{ m.alt }} (PDF, abre em nova aba)</a
-            ><br /><small>{{ m.credit }}</small>
+            ><br /><small class="media-source">fonte: {{ m.credit }}</small>
           </p>
         }
       }

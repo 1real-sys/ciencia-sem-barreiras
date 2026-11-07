@@ -157,7 +157,7 @@ test('editor draft isolation, upload, publish, refresh, remove section, restore,
   await expect(page.getByRole('status')).toContainText('Arquivo recebido');
   const photo = page.locator('.media-editor').last();
   await photo.getByLabel('Descrição da imagem').fill('Ilustração de teste');
-  await photo.getByLabel('Crédito e licença').fill('Arquivo de teste, criado para QA');
+  await photo.getByLabel('Fonte', { exact: true }).fill('Arquivo de teste, criado para QA');
   await photo.getByLabel('Confirmo o direito de uso desta imagem').check();
   await page.getByRole('button', { name: 'Publicar', exact: true }).click();
   await expect(page.getByRole('status')).toContainText('Atualização publicada');
@@ -228,7 +228,9 @@ test('PDFs in Texto and Atividades and multiple photos stay private until public
     await expect(page.getByRole('status')).toContainText('Arquivo recebido');
     const resource = page.locator('.media-editor').last();
     await resource.getByLabel('Título do PDF').fill(name);
-    await resource.getByLabel('Crédito e licença').fill('Documento de teste criado para QA');
+    await resource
+      .getByLabel('Fonte', { exact: true })
+      .fill(kind === 'text_pdf' ? 'eu mesma' : 'https://example.test/referencia');
     if (kind === 'text_pdf') {
       await expect(
         resource.getByRole('button', { name: name + ' (PDF)', exact: true }),
@@ -263,7 +265,7 @@ test('PDFs in Texto and Atividades and multiple photos stay private until public
       .nth(i)
       .getByLabel('Descrição da imagem', { exact: true })
       .fill('Foto de teste ' + i);
-    await images.nth(i).getByLabel('Crédito e licença').fill('Criada para QA');
+    await images.nth(i).getByLabel('Fonte', { exact: true }).fill('Criada para QA');
     await images.nth(i).getByLabel('Confirmo o direito de uso desta imagem').check();
   }
   await page.getByRole('button', { name: 'Salvar rascunho', exact: true }).click();
@@ -280,6 +282,10 @@ test('PDFs in Texto and Atividades and multiple photos stay private until public
     .locator('#texto')
     .getByRole('button', { name: 'Texto para leitura (PDF)', exact: true });
   await expect(opener).toBeVisible();
+  await expect(visitor.locator('#texto .media-source')).toHaveText('fonte: eu mesma');
+  await expect(visitor.locator('#atividades .media-source')).toHaveText(
+    'fonte: https://example.test/referencia',
+  );
   const pageCount = page.context().pages().length;
   const originalUrl = visitor.url();
   const snapshot = await (
@@ -439,7 +445,7 @@ test('Audiodescrição accepts audio, rejects video and removes WebVTT controls'
     await expect(page.getByRole('status')).toContainText('Arquivo recebido');
     const resource = panel.locator('.media-editor').last();
     await resource.getByLabel('Descrição do recurso').fill('Áudio de teste ' + ext);
-    await resource.getByLabel('Crédito e licença').fill('Silêncio sintético para QA');
+    await resource.getByLabel('Fonte', { exact: true }).fill('Silêncio sintético para QA');
     await resource.getByLabel('Transcrição').fill('Silêncio gerado apenas para teste.');
     await expect(resource.getByLabel('Pôster do vídeo')).toHaveCount(0);
     await expect(resource.getByLabel('Legenda WebVTT')).toHaveCount(0);
@@ -462,7 +468,7 @@ test('Audiodescrição accepts audio, rejects video and removes WebVTT controls'
     await expect(page.getByRole('status')).toContainText('Arquivo recebido');
     const resource = panel.locator('.media-editor').last();
     await resource.getByLabel('Descrição do recurso').fill(name);
-    await resource.getByLabel('Crédito e licença').fill('Silêncio sintético para QA');
+    await resource.getByLabel('Fonte', { exact: true }).fill('Silêncio sintético para QA');
     await resource.getByLabel('Transcrição').fill('Silêncio gerado apenas para teste.');
   }
   await page.getByRole('button', { name: 'Salvar rascunho', exact: true }).click();

@@ -226,8 +226,7 @@ async function canonical(
         fail(422, 'Endereço de vídeo não autorizado.');
     }
     if (publishing && m.enabled) {
-      if (!m.alt.trim() || !m.credit.trim())
-        fail(422, 'Preencha descrição e crédito dos recursos.');
+      if (!m.alt.trim() || !m.credit.trim()) fail(422, 'Preencha descrição e fonte dos recursos.');
       if (m.kind === 'image' && !m.rights) fail(422, 'Confirme o direito de uso da imagem.');
       if (['audio', 'libras', 'audiodescricao'].includes(m.kind) && !m.transcript.trim())
         fail(422, 'Adicione a transcrição do recurso.');

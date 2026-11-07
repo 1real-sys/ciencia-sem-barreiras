@@ -1,5 +1,12 @@
 # Aceite V4 — evidências locais de 04/11/2026
 
+## Atualização: apresentação da fonte — 06/11/2026
+
+- Campo “Crédito e licença” renomeado para “Fonte”, com orientação para nome de autor, link ou referência. Apresentação pública/prévia usa o prefixo fixo `fonte: ` em PDFs de Texto/Atividades, fotos, Libras e audiodescrição. Exemplo de conteúdo existente `eu mesma` passa a aparecer como `fonte: eu mesma`. Valores não são alterados; chave interna `credit`, estrutura e validações mantidas. Confirmação de direito de uso de imagem permanece separada.
+- Mensagens de validação no Worker e no simulador também usam “fonte”. Campo aceita texto livre até o limite existente de 1000 caracteres; URLs são exibidas como texto, sem HTML arbitrário. Quebra de referências longas evita overflow.
+- Tipos, lint, build com base `/ciencia-sem-barreiras/`, **63 testes unitários e 15 cenários Playwright passaram**. Browser preenche Fonte e verifica `fonte: eu mesma` e `fonte: https://example.test/referencia` após publicação/refresh. Fluxos anteriores de upload, fonte preservada em substituições, PDFs, áudio e layout continuam passando. Testes locais com simulador, sem publicação autenticada no serviço hospedado nesta execução.
+- Worker publicado na versão `7b8c1101-47d3-4716-ad57-f5a88d3f3c6e` para atualizar a mensagem de validação. Frontend depende do deploy Pages após o push; não há migração de banco.
+
 ## Atualização: capa do Paludário — 06/11/2026
 
 - Fotografia `testes/aquarioPaludario.jpeg` fornecida pelo responsável associada a Aquário Nascente do Rio – Paludário, mantendo o slug `aquario-nascente-rio`. Substitui a ilustração nos cartões da home, listagem e painel; rótulo Fotografia, original preservado. Build inclui o arquivo na lista explícita e o serve em `imagens/aquarioPaludario.jpeg`. Oito capas fotográficas; Fundo do Rio mantém ilustração.
