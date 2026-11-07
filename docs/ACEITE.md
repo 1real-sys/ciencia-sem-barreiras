@@ -1,5 +1,10 @@
 # Aceite V4 — evidências locais de 04/11/2026
 
+## Atualização: imagem de marca no cabeçalho — 07/11/2026
+
+- `testes/logoprojeto.jpeg`, fornecido pelo responsável, substitui o símbolo ✳ ao lado de Ciência Sem Barreiras. Imagem original preservada; renderização de 80×52px mantém proporção e enquadra as margens brancas. Link de início conserva nome acessível; imagem complementar usa `alt=""`. Nome do projeto e rodapé obrigatório preservados. Build copia explicitamente para `imagens/logoprojeto.jpeg`, sem incluir os demais arquivos de teste.
+- Tipos, lint, build com base `/ciencia-sem-barreiras/` e **15 cenários Playwright aprovados**. Logo visível e carregado (dimensão natural maior que zero) em 320/360/375/390/414/768/1024/1440px e no artefato sob subdiretório. Sem overflow nas verificações; axe-core e teclado existentes passaram. Captura móvel revisada visualmente. Publicação Pages será acionada pelo push.
+
 ## Atualização: Atividades usa o mesmo leitor de Texto — 07/11/2026
 
 - PDFs de Atividades passaram a usar `PdfViewer`, o mesmo componente de Texto, no site, editor e prévia. Mesmo popup, largura de leitura, tela inteira móvel, fonte, Baixar PDF/Fechar, Esc, Voltar e foco; retirado o link que abria outra aba. Tipos de mídia, publicação e controles independentes de cada seção preservados.

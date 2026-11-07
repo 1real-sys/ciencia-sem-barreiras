@@ -5,10 +5,10 @@ import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } fro
   imports: [RouterOutlet, RouterLink, RouterLinkActive],
   template: `<a href="#main" class="skip" (click)="skip($event)">Pular para o conteúdo</a>
     <header>
-      <a class="brand" routerLink="/" aria-label="Ciência Sem Barreiras, início"
-        ><span class="brand-icon" aria-hidden="true">✳</span
-        ><span>Ciência<br /><strong>Sem Barreiras</strong></span></a
-      >
+      <a class="brand" routerLink="/" aria-label="Ciência Sem Barreiras, início">
+        <img class="brand-logo" src="imagens/logoprojeto.jpeg" alt="" width="80" height="52" />
+        <span>Ciência<br /><strong>Sem Barreiras</strong></span>
+      </a>
       <nav aria-label="Navegação principal">
         <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }"
           >Início</a

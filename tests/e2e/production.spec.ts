@@ -64,6 +64,12 @@ test('built Pages artifact serves assets and reopens hash routes under configure
   page.on('pageerror', (e) => errors.push(e.message));
   await page.goto('http://localhost:4174' + base + '#/');
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Explore os espaços');
+  const logo = page.locator('header .brand-logo');
+  await expect(logo).toBeVisible();
+  await expect(logo).toHaveAttribute('src', 'imagens/logoprojeto.jpeg');
+  await expect
+    .poll(() => logo.evaluate((img: HTMLImageElement) => img.naturalWidth))
+    .toBeGreaterThan(0);
   const image = page.locator('.hero-art img');
   await expect(image).toBeVisible();
   expect(await image.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);

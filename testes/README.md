@@ -20,3 +20,7 @@ Solicitação de uso registrada nesta tarefa; autoria, licença específica e au
 O build copia somente os oito JPEGs oficiais da tabela para `imagens/` no artefato, com URLs relativas compatíveis com o subdiretório do GitHub Pages. São capas padrão da interface; mídias editoriais continuam sob gestão do painel/Supabase.
 
 Áudios, PDFs e demais fotos de teste nesta pasta não são incluídos automaticamente no site.
+
+## Marca do cabeçalho
+
+`logoprojeto.jpeg` foi fornecido pelo responsável para substituir o símbolo junto ao nome Ciência Sem Barreiras no cabeçalho, em 07/11/2026. Arquivo original preservado e copiado explicitamente para `imagens/logoprojeto.jpeg`. É complementar ao nome acessível do link de início (`alt=""`). Autoria/licença não informadas; não foi inventada atribuição nem autorização institucional.

@@ -30,6 +30,11 @@
                 "output": "imagens"
               },
               {
+                "glob": "logoprojeto.jpeg",
+                "input": "testes",
+                "output": "imagens"
+              },
+              {
                 "glob": "pdf.*.min.mjs",
                 "input": "node_modules/pdfjs-dist/build",
                 "output": "pdfjs"

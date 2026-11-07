@@ -31,6 +31,12 @@ for (const width of [320, 360, 375, 390, 414, 768, 1024, 1440])
     await page.goto('/');
     await expect(page.getByRole('heading', { level: 1 })).toContainText('Explore os espaços');
     await expect(page.locator('.space-card')).toHaveCount(9);
+    const logo = page.locator('header .brand-logo');
+    await expect(logo).toBeVisible();
+    await expect(logo).toHaveAttribute('src', 'imagens/logoprojeto.jpeg');
+    await expect
+      .poll(() => logo.evaluate((img: HTMLImageElement) => img.naturalWidth))
+      .toBeGreaterThan(0);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
     );
