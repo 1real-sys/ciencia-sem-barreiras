@@ -231,16 +231,9 @@ test('PDFs in Texto and Atividades and multiple photos stay private until public
     await resource
       .getByLabel('Fonte', { exact: true })
       .fill(kind === 'text_pdf' ? 'eu mesma' : 'https://example.test/referencia');
-    if (kind === 'text_pdf') {
-      await expect(
-        resource.getByRole('button', { name: name + ' (PDF)', exact: true }),
-      ).toHaveAttribute('aria-haspopup', 'dialog');
-    } else {
-      await expect(resource.getByRole('link', { name: 'Abrir PDF em nova aba' })).toHaveAttribute(
-        'target',
-        '_blank',
-      );
-    }
+    await expect(
+      resource.getByRole('button', { name: name + ' (PDF)', exact: true }),
+    ).toHaveAttribute('aria-haspopup', 'dialog');
   }
   const png = Buffer.from(
     'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a/p8AAAAASUVORK5CYII=',
@@ -274,7 +267,7 @@ test('PDFs in Texto and Atividades and multiple photos stay private until public
   await visitor.goto('/#/ambientes');
   await visitor.goto('/#/ambientes/aquario-lagoa?recurso=atividades');
   await expect(visitor.locator('#atividades')).toBeFocused();
-  await expect(visitor.locator('#texto button, #atividades a')).toHaveCount(0);
+  await expect(visitor.locator('#texto button, #atividades button')).toHaveCount(0);
   await page.getByRole('button', { name: 'Publicar', exact: true }).click();
   await expect(page.getByRole('status')).toContainText('Atualização publicada');
   await visitor.reload();
@@ -379,12 +372,36 @@ test('PDFs in Texto and Atividades and multiple photos stay private until public
   expect(page.context().pages()).toHaveLength(pageCount);
   expect(visitor.url()).toBe(originalUrl);
   await expect(visitor.locator('#texto .pending')).toHaveCount(0);
-  await expect(visitor.locator('#atividades a')).toContainText('Atividade em PDF');
+  const activityOpener = visitor
+    .locator('#atividades')
+    .getByRole('button', { name: 'Atividade em PDF (PDF)', exact: true });
+  await expect(activityOpener).toBeVisible();
   await expect(visitor.locator('#fotos img')).toHaveCount(2);
-  const previous = await visitor.locator('#atividades a').getAttribute('href');
+  const previous = snapshot.content.media.find(
+    (media: { kind: string; url: string }) => media.kind === 'activity_pdf',
+  ).url;
   const response = await visitor.request.get(previous!);
   expect(response.headers()['content-type']).toBe('application/pdf');
   expect(await response.body()).toEqual(pdf);
+  await activityOpener.click();
+  const activityModal = visitor.getByRole('dialog', { name: 'Atividade em PDF', exact: true });
+  await expect(activityModal).toBeVisible();
+  await expect(activityModal.locator('.textLayer')).toContainText('Documento de teste para QA');
+  await expect(activityModal.getByRole('button', { name: 'Fechar PDF' })).toBeFocused();
+  await expect(activityModal.locator('iframe')).toHaveCount(0);
+  const activityDownloadPending = visitor.waitForEvent('download');
+  await activityModal.getByRole('button', { name: 'Baixar PDF', exact: true }).click();
+  expect(await readFile((await (await activityDownloadPending).path())!)).toEqual(pdf);
+  await visitor.goBack();
+  await expect(activityModal).not.toBeVisible();
+  await expect(activityOpener).toBeFocused();
+  await activityOpener.click();
+  await expect(activityModal).toBeVisible();
+  await visitor.keyboard.press('Escape');
+  await expect(activityModal).not.toBeVisible();
+  await expect(activityOpener).toBeFocused();
+  expect(page.context().pages()).toHaveLength(pageCount);
+  expect(visitor.url()).toBe(originalUrl);
   const activity = page
     .locator('.media-editor')
     .filter({ has: page.getByLabel('Título do PDF', { exact: true }) })
@@ -398,7 +415,18 @@ test('PDFs in Texto and Atividades and multiple photos stay private until public
   await expect(page.getByRole('status')).toContainText('Atualização publicada');
   await visitor.reload();
   await expect(visitor.locator('#texto button')).toHaveCount(0);
-  await expect(visitor.locator('#atividades a')).not.toHaveAttribute('href', previous!);
+  const updatedSnapshot = await (
+    await visitor.request.get('http://localhost:18787/public/spaces/aquario-lagoa')
+  ).json();
+  expect(
+    updatedSnapshot.content.media.find(
+      (media: { kind: string; url: string }) => media.kind === 'activity_pdf',
+    ).url,
+  ).not.toBe(previous);
+  await activityOpener.click();
+  await expect(activityModal.locator('.textLayer')).toContainText('Documento de teste para QA');
+  await activityModal.getByRole('button', { name: 'Fechar PDF' }).click();
+  await expect(activityModal).not.toBeVisible();
   expect((await new AxeBuilder({ page: visitor }).analyze()).violations).toEqual([]);
   await visitor.close();
 });

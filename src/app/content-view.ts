@@ -120,11 +120,9 @@ import { PdfViewer } from './pdf-viewer';
       <h2>Atividades</h2>
       @for (m of content().media; track m.id) {
         @if (m.kind === 'activity_pdf' && m.enabled) {
-          <p>
-            <a [href]="m.url" target="_blank" rel="noopener noreferrer"
-              >{{ m.alt }} (PDF, abre em nova aba)</a
-            ><br /><small class="media-source">fonte: {{ m.credit }}</small>
-          </p>
+          <div class="pdf-document">
+            <app-pdf [media]="m" /><br /><small class="media-source">fonte: {{ m.credit }}</small>
+          </div>
         }
       }
       @if (!has('activity_pdf')) {

@@ -1,5 +1,10 @@
 # Aceite V4 — evidências locais de 04/11/2026
 
+## Atualização: Atividades usa o mesmo leitor de Texto — 07/11/2026
+
+- PDFs de Atividades passaram a usar `PdfViewer`, o mesmo componente de Texto, no site, editor e prévia. Mesmo popup, largura de leitura, tela inteira móvel, fonte, Baixar PDF/Fechar, Esc, Voltar e foco; retirado o link que abria outra aba. Tipos de mídia, publicação e controles independentes de cada seção preservados.
+- Tipos, lint, build com base `/ciencia-sem-barreiras/` e **15 cenários Playwright aprovados**. Editor exibe o acionador de popup para ambos os tipos. Browser publica Atividades, confere texto renderizado no leitor, ausência de iframe/nova aba, bytes do download, Voltar/Esc, retorno do foco e URL preservada. Após substituir o arquivo e desabilitar Texto, Atividades continua abrindo a nova versão no mesmo leitor. API simulada; sem publicação autenticada de conteúdo real na nuvem nesta execução.
+
 ## Atualização: transcrição opcional em Libras — 07/11/2026
 
 - Removida a exigência de transcrição ao publicar vídeo em Libras, com campo “Transcrição (opcional)” no painel. Texto preenchido anteriormente é preservado; campo vazio não gera bloco de transcrição público. Áudio/audiodescrição mantêm sua validação e mensagens agora identificam a seção correspondente.

@@ -287,14 +287,8 @@ interface EditorData {
                 </select>
               }
             }
-            @if (m.kind === 'text_pdf') {
+            @if (m.kind === 'text_pdf' || m.kind === 'activity_pdf') {
               <app-pdf [media]="m" />
-            } @else if (m.kind === 'activity_pdf') {
-              <p>
-                <a [href]="m.url" target="_blank" rel="noopener noreferrer"
-                  >Abrir PDF em nova aba</a
-                >
-              </p>
             }
             <label [for]="'replace-' + m.id">Substituir arquivo</label
             ><input

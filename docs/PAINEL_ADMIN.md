@@ -35,7 +35,7 @@ A estudante **não acessa Github, não sabe Git e não pode editar código**. A 
 
 - Texto recebe também PDFs pelo campo “Anexar PDF do texto”, mantendo o editor existente.
 - Atividades é uma nova seção que, nesta etapa, recebe apenas PDFs. Não há jogos ou botões de jogos.
-- PDFs usam título, crédito, rascunho, prévia (Texto em popup com leitor dedicado) e publicação; podem ser substituídos, desabilitados ou removidos. Máximo 50 MB por arquivo.
+- PDFs usam título, crédito, rascunho, prévia (Texto e Atividades no mesmo popup com leitor dedicado) e publicação; podem ser substituídos, desabilitados ou removidos. Máximo 50 MB por arquivo.
 - Fotos aceita várias imagens em uma seleção ou envios sucessivos. Máximo 40 recursos totais por ambiente, incluindo os outros tipos.
 - Área pública apresenta links de PDFs em Texto e Atividades, com estado “Conteúdo em preparação” quando não há arquivos publicados. O controle de Texto inclui seus PDFs; Atividades é independente.
 
