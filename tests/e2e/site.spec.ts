@@ -269,6 +269,7 @@ test('PDFs in Texto and Atividades and multiple photos stay private until public
   await page.getByRole('button', { name: 'Salvar rascunho', exact: true }).click();
   await expect(page.getByRole('status')).toContainText('Rascunho salvo');
   const visitor = await page.context().newPage();
+  await visitor.goto('/#/ambientes');
   await visitor.goto('/#/ambientes/aquario-lagoa?recurso=atividades');
   await expect(visitor.locator('#atividades')).toBeFocused();
   await expect(visitor.locator('#texto button, #atividades a')).toHaveCount(0);
@@ -307,6 +308,25 @@ test('PDFs in Texto and Atividades and multiple photos stay private until public
   await visitor.keyboard.press('Escape');
   await expect(modal).not.toBeVisible();
   await expect(opener).toBeFocused();
+  await expect.poll(() => visitor.evaluate(() => history.state?.csbPdf || null)).toBe(null);
+  // Browser history is also used by Android Back and browser Back gestures.
+  for (const width of [320, 390]) {
+    await visitor.setViewportSize({ width, height: 900 });
+    await opener.click();
+    await expect(modal).toBeVisible();
+    await visitor.goBack();
+    await expect(modal).not.toBeVisible();
+    await expect(opener).toBeFocused();
+    expect(visitor.url()).toBe(originalUrl);
+  }
+  await visitor.goForward();
+  await expect(modal).toBeVisible();
+  await visitor.goBack();
+  await expect(modal).not.toBeVisible();
+  await visitor.goBack();
+  await expect(visitor.getByRole('heading', { name: 'Explore os nove ambientes' })).toBeVisible();
+  await visitor.goForward();
+  await expect(opener).toBeVisible();
   await opener.click();
   await expect(modal).toBeVisible();
   await modal.getByRole('button', { name: 'Fechar PDF', exact: true }).click();

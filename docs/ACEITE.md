@@ -1,5 +1,11 @@
 # Aceite V4 — evidências locais de 04/11/2026
 
+## Atualização: Voltar fecha o PDF — 06/11/2026
+
+- O popup registra uma entrada temporária no histórico, sem mudar a URL. Voltar fecha primeiro o PDF, preservando o ambiente; o próximo Voltar segue a navegação anterior. Fechar por botão, Esc ou área externa também remove a entrada temporária. Enquanto a remoção está em andamento, o acionador aguarda a conclusão; depois recebe novamente o foco. Avançar reabre o popup enquanto seu componente permanece na página.
+- Tipos, lint, build com base `/ciencia-sem-barreiras/` e **15 cenários Playwright aprovados**. Histórico Voltar exercitado em 320 e 390 px, ambiente/URL preservados, retorno de foco, Avançar, segundo Voltar para a listagem e reabertura subsequente conferidos. O teste também cobre fechamento por botão e Esc sem deixar entrada extra no histórico. A primeira execução detectou perda de foco ao desabilitar temporariamente o botão; o retorno agora acontece após renderizar a conclusão da limpeza.
+- Automação em Chromium com viewport móvel, sem aparelho Android/iPhone físico. Gestos/botão de sistema e leitores PDF móveis continuam exigindo conferência em dispositivo real.
+
 ## Atualização: PDF de Texto em popup — 06/11/2026
 
 - PDFs de “Vamos conhecer este ambiente?” abrem em diálogo modal dentro da página, também no editor e na prévia. Leitor nativo do navegador em iframe com título, botão Fechar PDF, fechamento por Esc/área externa e retorno do foco ao acionador. Fonte descarregada ao fechar; fundo sem rolagem enquanto o popup está aberto.
