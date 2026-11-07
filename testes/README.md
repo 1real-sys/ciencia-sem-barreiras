@@ -16,4 +16,6 @@ Originais JPEG preservados, sem alteração de cores. Exibidos como “Fotografi
 
 Solicitação de uso registrada nesta tarefa; autoria, licença específica e autorização institucional não foram informadas e não são presumidas. Não atribuir crédito inventado. Nascente do Rio e Fundo do Rio mantêm ilustrações por não haver fotografias correspondentes nesta entrega.
 
-O build copia os JPEGs para `imagens/`, com URLs relativas compatíveis com o subdiretório do GitHub Pages. São capas padrão da interface; mídias editoriais continuam sob gestão do painel/Supabase.
+O build copia somente os sete JPEGs oficiais da tabela para `imagens/` no artefato, com URLs relativas compatíveis com o subdiretório do GitHub Pages. São capas padrão da interface; mídias editoriais continuam sob gestão do painel/Supabase.
+
+Áudios, PDFs e demais fotos de teste nesta pasta não são incluídos automaticamente no site.

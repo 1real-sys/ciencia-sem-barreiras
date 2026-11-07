@@ -25,8 +25,8 @@
                 "input": "public"
               },
               {
-                "glob": "*.jpeg",
-                "input": "imagens",
+                "glob": "{AquarioLagoa,AquarioMarinho,AquarioPraia,Manguezal,Restinga,MataAtlantica1,MataAtlantica2}.jpeg",
+                "input": "testes",
                 "output": "imagens"
               },
               {
