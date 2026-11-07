@@ -103,7 +103,7 @@ import { PdfViewer } from './pdf-viewer';
                 <small>fonte: {{ m.credit }}</small>
               </p>
             }
-            @if (m.transcript) {
+            @if (kind === 'libras' && m.transcript) {
               <details>
                 <summary>Transcrição</summary>
                 <p class="preserve">{{ m.transcript }}</p>

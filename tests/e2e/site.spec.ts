@@ -486,7 +486,7 @@ test('Audiodescrição accepts audio, rejects video and removes WebVTT controls'
     const resource = panel.locator('.media-editor').last();
     await resource.getByLabel('Descrição do recurso').fill('Áudio de teste ' + ext);
     await resource.getByLabel('Fonte', { exact: true }).fill('Silêncio sintético para QA');
-    await resource.getByLabel('Transcrição').fill('Silêncio gerado apenas para teste.');
+    await expect(resource.getByLabel('Transcrição', { exact: true })).toHaveCount(0);
     await expect(resource.getByLabel('Pôster do vídeo')).toHaveCount(0);
     await expect(resource.getByLabel('Legenda WebVTT')).toHaveCount(0);
   }
@@ -509,7 +509,7 @@ test('Audiodescrição accepts audio, rejects video and removes WebVTT controls'
     const resource = panel.locator('.media-editor').last();
     await resource.getByLabel('Descrição do recurso').fill(name);
     await resource.getByLabel('Fonte', { exact: true }).fill('Silêncio sintético para QA');
-    await resource.getByLabel('Transcrição').fill('Silêncio gerado apenas para teste.');
+    await expect(resource.getByLabel('Transcrição', { exact: true })).toHaveCount(0);
   }
   await page.getByLabel('Anexar Vídeo em Libras (máximo 50 MB)').setInputFiles({
     name: 'libras.mp4',
@@ -553,8 +553,10 @@ test('Audiodescrição accepts audio, rejects video and removes WebVTT controls'
     .poll(() => player.evaluate((audio: HTMLAudioElement) => audio.readyState))
     .toBeGreaterThan(0);
   expect(await player.evaluate((audio: HTMLAudioElement) => audio.paused)).toBe(true);
-  await visitor.getByText('Transcrição', { exact: true }).first().click();
-  await expect(visitor.getByText('Silêncio gerado apenas para teste.').first()).toBeVisible();
+  await expect(visitor.locator('#audiodescricao details')).toHaveCount(0);
+  await expect(
+    visitor.locator('#audiodescricao').getByText('Transcrição', { exact: true }),
+  ).toHaveCount(0);
   for (const width of [320, 390, 1440]) {
     await visitor.setViewportSize({ width, height: 900 });
     expect(await visitor.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(

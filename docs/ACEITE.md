@@ -1,5 +1,11 @@
 # Aceite V4 — evidências locais de 04/11/2026
 
+## Atualização: transcrição retirada de Audiodescrição — 07/11/2026
+
+- Retirados o campo de transcrição do editor de Audiodescrição, sua exigência na publicação e o bloco público correspondente. Registros e históricos antigos são preservados, sem alteração de schema; valores antigos não são renderizados nessa seção. A transcrição opcional de Libras permanece disponível.
+- Tipos, lint, build com base `/ciencia-sem-barreiras/`, **63 testes unitários e 15 cenários Playwright aprovados**. Teste do Worker publica Audiodescrição com transcrição vazia; browser confirma campo ausente, publicação de nove áudios sem preencher transcrição e ausência do bloco público. Demais fluxos e verificações de layout/acessibilidade passaram. API simulada nesses cenários; não houve publicação autenticada de áudio real no serviço hospedado nesta execução.
+- Worker publicado na versão `c56ff7e4-d46c-4d03-8762-5c6104f3574d`; frontend será atualizado pelo Pages após push. Nenhuma migração de banco necessária.
+
 ## Atualização: fundo do logo integrado ao site — 07/11/2026
 
 - Ajuste localizado na imagem do cabeçalho com `mix-blend-mode: multiply`: o branco do JPEG passa a acompanhar o fundo claro, sem caixa branca destacada. Arquivo original, proporção, desenho e textos preservados.

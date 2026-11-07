@@ -643,16 +643,24 @@ describe('Worker security boundary', () => {
     content.media[5].enabled = true;
     fakeDb.rpc.mockClear();
     content.media[5].transcript = '';
+    const emptyDescriptionTranscript = await worker.fetch(
+      req('/admin/spaces/aquario-marinho/publish', 'POST', { revision: 4 }, token),
+      env,
+    );
+    expect(emptyDescriptionTranscript.status).toBe(200);
+    expect(fakeDb.rpc.mock.calls[0][1].p_content.media[5].transcript).toBe('');
+    fakeDb.rpc.mockClear();
+    content.media[5].kind = 'audio';
     const missingAudioTranscript = await worker.fetch(
       req('/admin/spaces/aquario-marinho/publish', 'POST', { revision: 4 }, token),
       env,
     );
     expect(missingAudioTranscript.status).toBe(422);
     expect(await missingAudioTranscript.json()).toEqual({
-      error: 'Adicione a transcrição da audiodescrição.',
+      error: 'Adicione a transcrição do áudio.',
     });
     expect(fakeDb.rpc).not.toHaveBeenCalled();
-    content.media[5].transcript = 'Texto de teste';
+    content.media[5].kind = 'audiodescricao';
     fakeDb.storage.from.mockReturnValue({
       copy: async () => ({ data: null, error: Error('failed') }),
       exists: async () => ({ data: false, error: null }),

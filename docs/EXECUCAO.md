@@ -87,7 +87,7 @@ O smoke verifica negativas de leitura/escrita, RPC e Storage anônimos, além da
 
 1. Abra `/#/admin`, entre e escolha um dos nove ambientes.
 2. Em Texto, adicione parágrafos, títulos, itens de lista ou links HTTPS. O botão Negrito aplica destaque à parte. A colagem é texto simples; HTML nunca é executado. Não é necessário escrever Markdown ou JSON.
-3. Anexe fotos, áudios e vídeos. Aguarde o recebimento. Preencha descrição, crédito, transcrição e direito de uso. Escolha uma imagem enviada como pôster, se desejado. Use **Definir como capa** para mover uma imagem ao primeiro lugar da galeria. Para substituir/remover, confirme no diálogo.
+3. Anexe fotos, áudios e vídeos. Aguarde o recebimento. Preencha descrição e fonte, confirme o direito de uso das fotos e os demais campos disponíveis. Escolha uma imagem enviada como pôster, se desejado. Use **Definir como capa** para mover uma imagem ao primeiro lugar da galeria. Para substituir/remover, confirme no diálogo.
 4. Salve o rascunho. Ele continua privado; a prévia reproduz as mesmas seções da página pública. Após 30 minutos, reabra o ambiente para renovar URLs temporárias de prévia.
 5. Clique Publicar e confirme. Apenas após a resposta do servidor aparece o sucesso. Abra a versão publicada. A próxima leitura busca a revisão nova sem rebuild ou commit.
 6. Para retirar uma seção, desmarque sua exibição e publique. A mídia permanece recuperável. Histórico permite recuperar versões como rascunho; revise e publique novamente para torná-las públicas.
@@ -124,7 +124,7 @@ A publicação mantém staging privado e URLs temporárias, promovendo PDFs junt
 
 Com 0001–0004 já aplicadas, executar apenas `0005_audio_description.sql` e publicar o Worker antes do frontend. A migração permite AAC, WAV, WMA e FLAC nos buckets e adiciona o tipo interno `audiodescricao_audio`, mantendo os registros antigos. Pode ser repetida.
 
-Audiodescrição aceita MP3, AAC (ADTS/ADIF), WAV, WMA, M4A/MP4 somente com áudio, OGG/Opus e FLAC, até 50 MB. Não aceita upload de vídeo nem endereço externo. A transcrição continua obrigatória ao publicar. Há player sem autoplay e link para abrir/baixar; formatos sem suporte nativo no navegador podem ser ouvidos em aplicativo externo. Preferir MP3 para distribuição. Não há transcodificação automática.
+Audiodescrição aceita MP3, AAC (ADTS/ADIF), WAV, WMA, M4A/MP4 somente com áudio, OGG/Opus e FLAC, até 50 MB. Não aceita upload de vídeo nem endereço externo. Audiodescrição não exige transcrição; esse campo foi retirado do editor e da apresentação pública. Há player sem autoplay e link para abrir/baixar; formatos sem suporte nativo no navegador podem ser ouvidos em aplicativo externo. Preferir MP3 para distribuição. Não há transcodificação automática.
 
 O Worker valida MIME e assinatura; em M4A inspeciona as trilhas do `moov` (somente `soun`) com leituras Range que pulam o conteúdo de mídia; em WMA verifica os objetos de streams ASF, rejeitando vídeo. Metadados MP4/ASF limitados a 2 MiB; MP4 aceita até 64 caixas de topo. Ogg verifica identificação dos streams iniciais (até 64 KiB). Essas verificações são de formato/metadados, não decodificação completa de áudio. Os testes usam arquivos reais de silêncio sintético e vídeos de quadro preto, restritos a `tests/fixtures/audio/`.
 

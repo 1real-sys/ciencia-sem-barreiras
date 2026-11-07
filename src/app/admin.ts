@@ -270,7 +270,7 @@ interface EditorData {
                 >URL direta do vídeo HTTPS (domínio autorizado)</label
               ><input [id]="'external-' + m.id" [(ngModel)]="m.url" type="url" />
             }
-            @if (m.kind === 'audio' || m.kind === 'libras' || m.kind === 'audiodescricao') {
+            @if (m.kind === 'audio' || m.kind === 'libras') {
               <label [for]="'transcript-' + m.id">{{
                 m.kind === 'libras' ? 'Transcrição (opcional)' : 'Transcrição'
               }}</label
