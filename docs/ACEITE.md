@@ -1,5 +1,10 @@
 # Aceite V4 — evidências locais de 04/11/2026
 
+## Atualização: fundo do logo integrado ao site — 07/11/2026
+
+- Ajuste localizado na imagem do cabeçalho com `mix-blend-mode: multiply`: o branco do JPEG passa a acompanhar o fundo claro, sem caixa branca destacada. Arquivo original, proporção, desenho e textos preservados.
+- Build com base `/ciencia-sem-barreiras/` aprovado. Capturas do cabeçalho antes/depois em 390px e depois em 320/1440px revisadas visualmente (`test-results/logo-before-390.png` e `logo-after-{320,390,1440}.png`). Três cenários responsivos Playwright passaram; sem overflow e axe-core sem violações nos escopos existentes de 390/1440px. Verificação em Chromium, sem aparelho físico.
+
 ## Atualização: imagem de marca no cabeçalho — 07/11/2026
 
 - `testes/logoprojeto.jpeg`, fornecido pelo responsável, substitui o símbolo ✳ ao lado de Ciência Sem Barreiras. Imagem original preservada; renderização de 80×52px mantém proporção e enquadra as margens brancas. Link de início conserva nome acessível; imagem complementar usa `alt=""`. Nome do projeto e rodapé obrigatório preservados. Build copia explicitamente para `imagens/logoprojeto.jpeg`, sem incluir os demais arquivos de teste.
